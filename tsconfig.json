@@ -30,8 +30,7 @@
     "downlevelIteration": true,
     "baseUrl": ".",
     "types": [
-      "node",
-      "vite/client"
+      "node"
     ],
     "paths": {
       "@/*": [
