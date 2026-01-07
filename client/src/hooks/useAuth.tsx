@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   superAdmin: any | null;
   isLoading: boolean;
-  login: (email: string, password: string, workspaceId?: number) => Promise<void>;
+  login: (login: string, password: string, workspaceId?: number) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isSuperAdmin: boolean;
@@ -35,10 +35,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const { data: superAdminData, isLoading: isLoadingSuperAdmin } = useQuery({
-    queryKey: ['/api/super-admin/me'],
+    queryKey: ['/api/auth/super-admin/me'],
     retry: false,
     queryFn: async () => {
-      const res = await fetch('/api/super-admin/me', {
+      const res = await fetch('/api/auth/super-admin/me', {
         credentials: 'include',
       });
       if (res.status === 401) return null;
@@ -62,8 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [superAdminData]);
 
   const loginMutation = useMutation({
-    mutationFn: async ({ email, password, workspaceId }: { email: string; password: string; workspaceId?: number }) => {
-      return await apiRequest('POST', '/api/auth/login', { email, password, workspaceId });
+    mutationFn: async ({ login, password, workspaceId }: { login: string; password: string; workspaceId?: number }) => {
+      return await apiRequest('POST', '/api/auth/login', { login, password, workspaceId });
     },
     onSuccess: (data) => {
       if (data && 'user' in data) {
@@ -84,13 +84,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const login = async (email: string, password: string, workspaceId?: number) => {
-    await loginMutation.mutateAsync({ email, password, workspaceId });
+  const login = async (login: string, password: string, workspaceId?: number) => {
+    await loginMutation.mutateAsync({ login, password, workspaceId });
   };
 
   const logout = async () => {
     if (superAdmin) {
-      await fetch('/api/super-admin/logout', {
+      await fetch('/api/auth/super-admin/logout', {
         method: 'POST',
         credentials: 'include',
       });

@@ -38,6 +38,7 @@ export interface IStorage {
   // Users (updated to filter by workspaceId)
   getUser(id: number, workspaceId?: number): Promise<User | undefined>;
   getUserByEmail(email: string, workspaceId?: number): Promise<User | undefined>;
+  getUserByLoginOrEmail(loginOrEmail: string, workspaceId?: number): Promise<User | undefined>;
   getUsers(workspaceId?: number): Promise<User[]>;
   getUserWithPassword(id: number, workspaceId?: number): Promise<User | undefined>; // For admin access to see passwords
   getWorkspaceAdminUser(workspaceId: number): Promise<User | undefined>; // Get admin user for workspace
@@ -277,6 +278,21 @@ export class DatabaseStorage implements IStorage {
       return user || undefined;
     }
     const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  async getUserByLoginOrEmail(loginOrEmail: string, workspaceId?: number): Promise<User | undefined> {
+    this.ensureDb();
+    const loginCondition = or(eq(users.email, loginOrEmail), eq(users.username, loginOrEmail));
+
+    if (workspaceId) {
+      const [user] = await db.select().from(users).where(
+        and(loginCondition, eq(users.workspaceId, workspaceId))
+      );
+      return user || undefined;
+    }
+
+    const [user] = await db.select().from(users).where(loginCondition);
     return user || undefined;
   }
 

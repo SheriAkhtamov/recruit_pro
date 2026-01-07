@@ -38,6 +38,7 @@ export const storage = {
     // User operations (modular)
     getUser: userStorage.getUser.bind(userStorage),
     getUserByEmail: userStorage.getUserByEmail.bind(userStorage),
+    getUserByLoginOrEmail: userStorage.getUserByLoginOrEmail.bind(userStorage),
     getUsers: userStorage.getUsers.bind(userStorage),
     getUserWithPassword: userStorage.getUserWithPassword.bind(userStorage),
     getWorkspaceAdminUser: userStorage.getWorkspaceAdminUser.bind(userStorage),
