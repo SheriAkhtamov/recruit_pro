@@ -18,7 +18,8 @@ export class MessageStorage {
       ORDER BY last_message_time DESC
     `;
 
-        return db.execute(query) as Promise<any[]>;
+        const result = await db.execute(query);
+        return result.rows as any[];
     }
 
     async getMessagesBetweenUsers(senderId: number, receiverId: number, workspaceId?: number): Promise<Message[]> {

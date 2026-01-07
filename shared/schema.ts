@@ -345,13 +345,23 @@ export const insertSuperAdminSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
+const dateOfBirthSchema = z.preprocess(
+  (value) => {
+    if (value === '' || value === null) {
+      return null;
+    }
+    return value;
+  },
+  z.coerce.date().nullable()
+);
+
 export const insertUserSchema = z.object({
   workspaceId: z.number().int().positive(),
   email: z.string().email(),
   password: z.string().min(1),
   fullName: z.string().min(1),
   phone: z.string().optional(),
-  dateOfBirth: z.union([z.string(), z.date()]).optional().nullable(),
+  dateOfBirth: dateOfBirthSchema.optional(),
   position: z.string().optional(),
   role: z.enum(['admin', 'hr_manager', 'employee']).default('employee'),
   hasReportAccess: z.boolean().default(false),

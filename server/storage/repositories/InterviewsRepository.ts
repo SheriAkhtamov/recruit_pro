@@ -82,10 +82,15 @@ export class InterviewsRepository {
 
         // Auto-progress candidate when stage is passed
         if (updatedStage && stage.status === 'passed') {
+            if (updatedStage.candidateId === null) {
+                throw new Error('Candidate ID is missing for this interview stage.');
+            }
+
+            const candidateId = updatedStage.candidateId;
             const candidate = await db
                 .select()
                 .from(candidates)
-                .where(eq(candidates.id, updatedStage.candidateId))
+                .where(eq(candidates.id, candidateId))
                 .limit(1);
 
             if (candidate[0]) {
@@ -94,14 +99,14 @@ export class InterviewsRepository {
                 await db
                     .update(candidates)
                     .set({ currentStageIndex: nextStageIndex, updatedAt: new Date() })
-                    .where(eq(candidates.id, updatedStage.candidateId));
+                    .where(eq(candidates.id, candidateId));
 
                 const nextStage = await db
                     .select()
                     .from(interviewStages)
                     .where(
                         and(
-                            eq(interviewStages.candidateId, updatedStage.candidateId),
+                            eq(interviewStages.candidateId, candidateId),
                             eq(interviewStages.stageIndex, nextStageIndex)
                         )
                     )
@@ -125,20 +130,24 @@ export class InterviewsRepository {
                     await db
                         .update(candidates)
                         .set({ status: 'documentation', updatedAt: new Date() })
-                        .where(eq(candidates.id, updatedStage.candidateId));
+                        .where(eq(candidates.id, candidateId));
                 }
             }
         } else if (updatedStage && stage.status === 'failed') {
             // Mark candidate as rejected
+            if (updatedStage.candidateId === null) {
+                throw new Error('Candidate ID is missing for this interview stage.');
+            }
+            const candidateId = updatedStage.candidateId;
             await db
                 .update(candidates)
                 .set({
                     status: 'rejected',
-                    rejectionStage: updatedStage.stageName,
+                    rejectionStage: updatedStage.stageIndex,
                     rejectionReason: stage.comments || 'Failed interview stage',
                     updatedAt: new Date(),
                 })
-                .where(eq(candidates.id, updatedStage.candidateId));
+                .where(eq(candidates.id, candidateId));
         }
 
         return updatedStage;
@@ -152,7 +161,7 @@ export class InterviewsRepository {
         candidateId: number,
         stages: (InsertInterviewStage & { id?: number })[]
     ): Promise<void> {
-        await db.transaction(async (tx: typeof db) => {
+        await db.transaction(async (tx) => {
             // Get existing stages
             const existingStages = await tx
                 .select()
@@ -218,7 +227,7 @@ export class InterviewsRepository {
         scheduledAt: Date,
         duration: number = 30
     ): Promise<Interview> {
-        return await db.transaction(async (tx: typeof db) => {
+        return await db.transaction(async (tx) => {
             const startTime = new Date(scheduledAt);
             const endTime = new Date(scheduledAt.getTime() + duration * 60000);
 
@@ -318,18 +327,48 @@ export class InterviewsRepository {
      * Get all interviews
      */
     async getInterviews(workspaceId?: number): Promise<Interview[]> {
-        let query = db
-            .select()
-            .from(interviews)
-            .where(isNull(interviews.deletedAt));
-
         if (workspaceId) {
-            query = query
+            return await db
+                .select({
+                    id: interviews.id,
+                    stageId: interviews.stageId,
+                    candidateId: interviews.candidateId,
+                    interviewerId: interviews.interviewerId,
+                    scheduledAt: interviews.scheduledAt,
+                    duration: interviews.duration,
+                    status: interviews.status,
+                    meetingLink: interviews.meetingLink,
+                    outcome: interviews.outcome,
+                    notes: interviews.notes,
+                    deletedAt: interviews.deletedAt,
+                    createdAt: interviews.createdAt,
+                    updatedAt: interviews.updatedAt,
+                })
+                .from(interviews)
                 .innerJoin(candidates, eq(interviews.candidateId, candidates.id))
-                .where(and(eq(candidates.workspaceId, workspaceId), isNull(interviews.deletedAt)));
+                .where(and(eq(candidates.workspaceId, workspaceId), isNull(interviews.deletedAt)))
+                .orderBy(desc(interviews.scheduledAt));
         }
 
-        return await query.orderBy(desc(interviews.scheduledAt));
+        return await db
+            .select({
+                id: interviews.id,
+                stageId: interviews.stageId,
+                candidateId: interviews.candidateId,
+                interviewerId: interviews.interviewerId,
+                scheduledAt: interviews.scheduledAt,
+                duration: interviews.duration,
+                status: interviews.status,
+                meetingLink: interviews.meetingLink,
+                outcome: interviews.outcome,
+                notes: interviews.notes,
+                deletedAt: interviews.deletedAt,
+                createdAt: interviews.createdAt,
+                updatedAt: interviews.updatedAt,
+            })
+            .from(interviews)
+            .where(isNull(interviews.deletedAt))
+            .orderBy(desc(interviews.scheduledAt));
     }
 }
 

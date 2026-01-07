@@ -99,11 +99,17 @@ router.get("/me", requireAuth, async (req, res, next) => {
 router.put("/me", requireAuth, async (req, res, next) => {
   try {
     const { fullName, phone, dateOfBirth, position } = req.body;
+    const normalizedDateOfBirth =
+      dateOfBirth === undefined
+        ? undefined
+        : dateOfBirth === null || dateOfBirth === ''
+          ? null
+          : new Date(dateOfBirth);
 
     const updatedUser = await storage.updateUser(req.user!.id, {
       fullName,
       phone,
-      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
+      dateOfBirth: normalizedDateOfBirth,
       position,
     });
 
