@@ -154,12 +154,10 @@ router.post('/login-as-admin/:workspaceId', requireSuperAdmin, async (req, res) 
         // Create a special session for super admin viewing a workspace
         const sanitizedUser = authService.sanitizeUser(adminUser) as any;
 
-        // Mark as super admin view mode
-        sanitizedUser.isSuperAdminView = true;
-
         // Set user in session
-        req.session.user = sanitizedUser;
-        req.session.superAdmin = req.session.superAdmin; // Keep super admin session
+        req.session.userId = sanitizedUser.id;
+        req.session.workspaceId = sanitizedUser.workspaceId;
+        req.session.isSuperAdminView = true;
 
         req.session.save((err: Error | null) => {
             if (err) {
@@ -167,7 +165,7 @@ router.post('/login-as-admin/:workspaceId', requireSuperAdmin, async (req, res) 
                 return res.status(500).json({ error: 'Session save failed' });
             }
 
-            res.json({ user: req.session.user });
+            res.json({ user: sanitizedUser });
         });
     } catch (error) {
         logger.error('Error logging in as admin', { error, workspaceId: req.params.workspaceId });

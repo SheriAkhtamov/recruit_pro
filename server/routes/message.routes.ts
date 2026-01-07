@@ -15,12 +15,12 @@ export function setBroadcastFunction(fn: (data: any) => void) {
 // Get all conversations for current user
 router.get('/conversations', requireAuth, async (req, res) => {
     try {
-        const userId = req.session!.user!.id;
+        const userId = req.user!.id;
         // getConversationsByUser is the correct method name in storage
         const conversations = await storage.getConversationsByUser(userId, req.workspaceId);
         res.json(conversations);
     } catch (error) {
-        logger.error('Failed to fetch conversations', { error, userId: req.session?.user?.id });
+        logger.error('Failed to fetch conversations', { error, userId: req.user?.id });
         res.status(500).json({ error: 'Failed to fetch conversations' });
     }
 });
@@ -28,14 +28,14 @@ router.get('/conversations', requireAuth, async (req, res) => {
 // Get messages in a conversation with specific user
 router.get('/conversation/:receiverId', requireAuth, async (req, res) => {
     try {
-        const senderId = req.session!.user!.id;
+        const senderId = req.user!.id;
         const receiverId = parseInt(req.params.receiverId);
 
         // getMessagesBetweenUsers takes only 2 args per storage interface
         const messages = await storage.getMessagesBetweenUsers(senderId, receiverId);
         res.json(messages);
     } catch (error) {
-        logger.error('Failed to fetch messages', { error, userId: req.session?.user?.id, otherUserId: req.params.receiverId });
+        logger.error('Failed to fetch messages', { error, userId: req.user?.id, otherUserId: req.params.receiverId });
         res.status(500).json({ error: 'Failed to fetch messages' });
     }
 });
@@ -50,7 +50,7 @@ router.post('/', requireAuth, async (req, res) => {
         }
 
         const message = await storage.createMessage({
-            senderId: req.session!.user!.id,
+            senderId: req.user!.id,
             receiverId: parseInt(receiverId),
             content,
             isRead: false,
@@ -65,7 +65,7 @@ router.post('/', requireAuth, async (req, res) => {
 
         res.json(message);
     } catch (error) {
-        logger.error('Error sending message', { error, senderId: req.session?.user?.id });
+        logger.error('Error sending message', { error, senderId: req.user?.id });
         res.status(500).json({ error: 'Failed to send message' });
     }
 });
@@ -74,7 +74,7 @@ router.post('/', requireAuth, async (req, res) => {
 router.put('/:id/read', requireAuth, async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const message = await storage.markMessageAsRead(id, req.session!.user!.id);
+        const message = await storage.markMessageAsRead(id, req.user!.id);
 
         broadcastToClients({
             type: 'MESSAGE_READ',

@@ -1,21 +1,12 @@
 import 'express-session';
+import type { SuperAdmin, User } from '@shared/schema';
 
 declare module 'express-session' {
   interface SessionData {
-    user?: {
-      id: number;
-      email: string;
-      fullName: string;
-      role: string;
-      workspaceId: number;
-      hasReportAccess?: boolean;
-    };
-    superAdmin?: {
-      id: number;
-      username: string;
-      fullName: string;
-      isActive: boolean;
-    };
+    userId?: number;
+    workspaceId?: number;
+    superAdminId?: number;
+    isSuperAdminView?: boolean;
   }
 }
 
@@ -23,6 +14,8 @@ declare global {
   namespace Express {
     interface Request {
       workspaceId?: number;
+      user?: User;
+      superAdmin?: SuperAdmin;
     }
   }
 }

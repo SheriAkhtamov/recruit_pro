@@ -53,13 +53,13 @@ router.post('/', requireAuth, async (req, res) => {
             requirements: req.body.requirements || null,
             status: req.body.status || 'active',
             workspaceId: req.workspaceId!,
-            createdBy: req.session!.user!.id,
+            createdBy: req.user!.id,
         };
 
         const vacancy = await storage.createVacancy(vacancyData);
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'CREATE_VACANCY',
             entityType: 'vacancy',
             entityId: vacancy.id,
@@ -93,7 +93,7 @@ router.put('/:id', requireAuth, async (req, res) => {
         const vacancy = await storage.updateVacancy(id, updates);
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'UPDATE_VACANCY',
             entityType: 'vacancy',
             entityId: id,
@@ -126,7 +126,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
         await storage.deleteVacancy(id, req.workspaceId);
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'DELETE_VACANCY',
             entityType: 'vacancy',
             entityId: id,

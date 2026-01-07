@@ -1,10 +1,9 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { storage } from '../storage';
 import { authService } from '../services/auth';
 import { superAuthService } from '../services/superAuth';
-import { devLog } from '../lib/logger';
 import { t } from '../lib/i18n';
+import { requireAuth, requireSuperAdmin } from '../middleware/auth.middleware';
 
 const router = Router();
 
@@ -40,8 +39,10 @@ router.post('/login', loginLimiter, async (req, res) => {
 
         // Set user in session
         const sanitizedUser = authService.sanitizeUser(user) as any;
-        req.session.user = sanitizedUser;
-        req.session.superAdmin = undefined; // Clear super admin session
+        req.session.userId = sanitizedUser.id;
+        req.session.workspaceId = sanitizedUser.workspaceId;
+        req.session.superAdminId = undefined;
+        req.session.isSuperAdminView = false;
 
         // Force session save with explicit callback
         req.session.save((err: Error | null) => {
@@ -49,7 +50,7 @@ router.post('/login', loginLimiter, async (req, res) => {
                 return res.status(500).json({ error: 'Session save failed' });
             }
 
-            res.json({ user: req.session.user });
+            res.json({ user: sanitizedUser });
         });
     } catch (error) {
         res.status(500).json({ error: 'Login failed' });
@@ -62,12 +63,8 @@ router.post('/logout', (req, res) => {
     });
 });
 
-router.get('/me', (req, res) => {
-    if (req.session?.user) {
-        res.json({ user: req.session.user });
-    } else {
-        res.status(401).json({ error: 'Not authenticated' });
-    }
+router.get('/me', requireAuth, (req, res) => {
+    res.json({ user: authService.sanitizeUser(req.user!) });
 });
 
 // Super Admin Authentication
@@ -82,11 +79,13 @@ router.post('/super-admin/login', superAdminLimiter, async (req, res) => {
         }
 
         // Clear any existing user session
-        req.session.user = undefined;
+        req.session.userId = undefined;
+        req.session.workspaceId = undefined;
+        req.session.isSuperAdminView = false;
 
         // Set super admin in session
         const sanitizedSuperAdmin = superAuthService.sanitizeSuperAdmin(superAdmin);
-        req.session.superAdmin = sanitizedSuperAdmin;
+        req.session.superAdminId = sanitizedSuperAdmin.id;
 
         // Force session save
         req.session.save((err: Error | null) => {
@@ -94,7 +93,7 @@ router.post('/super-admin/login', superAdminLimiter, async (req, res) => {
                 return res.status(500).json({ error: 'Session save failed' });
             }
 
-            res.json({ superAdmin: req.session.superAdmin });
+            res.json({ superAdmin: sanitizedSuperAdmin });
         });
     } catch (error) {
         res.status(500).json({ error: 'Super admin login failed' });
@@ -107,12 +106,8 @@ router.post('/super-admin/logout', (req, res) => {
     });
 });
 
-router.get('/super-admin/me', (req, res) => {
-    if (req.session?.superAdmin) {
-        res.json({ superAdmin: req.session.superAdmin });
-    } else {
-        res.status(401).json({ error: 'Not authenticated as super admin' });
-    }
+router.get('/super-admin/me', requireSuperAdmin, (req, res) => {
+    res.json({ superAdmin: superAuthService.sanitizeSuperAdmin(req.superAdmin!) });
 });
 
 export default router;

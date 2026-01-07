@@ -74,7 +74,7 @@ router.post('/', requireAuth, async (req, res) => {
         }
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'SCHEDULE_INTERVIEW',
             entityType: 'interview',
             entityId: interview.id,
@@ -132,7 +132,7 @@ router.put('/:id', requireAuth, async (req, res) => {
         }
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: isReschedule ? 'RESCHEDULE_INTERVIEW' : 'UPDATE_INTERVIEW',
             entityType: 'interview',
             entityId: id,
@@ -182,7 +182,7 @@ router.put('/:id/reschedule', requireAuth, async (req, res) => {
         }
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'RESCHEDULE_INTERVIEW',
             entityType: 'interview',
             entityId: id,

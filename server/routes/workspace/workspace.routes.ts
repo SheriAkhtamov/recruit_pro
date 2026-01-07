@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { storage } from "../../storage";
 import { insertWorkspaceSchema } from "@shared/schema";
-import { requireAuth, requireAdmin, requireWorkspaceAccess } from "../auth/middleware";
+import { requireAuth, requireAdmin, requireWorkspaceAccess } from "../../middleware/auth.middleware";
 
 const router = Router();
 
