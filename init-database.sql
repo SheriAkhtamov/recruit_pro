@@ -55,14 +55,18 @@ CREATE TABLE IF NOT EXISTS candidates (
     vacancy_id INTEGER REFERENCES vacancies(id),
     resume_url TEXT,
     resume_filename VARCHAR(255),
+    photo_url TEXT,
     source VARCHAR(100),
     interview_stage_chain JSONB,
     current_stage_index INTEGER DEFAULT 0,
     status VARCHAR(50) DEFAULT 'active',
     rejection_reason TEXT,
     rejection_stage INTEGER,
+    dismissal_reason TEXT,
+    dismissal_date TIMESTAMP,
     parsed_resume_data JSONB,
     created_by INTEGER REFERENCES users(id),
+    deleted_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -79,6 +83,7 @@ CREATE TABLE IF NOT EXISTS interview_stages (
     completed_at TIMESTAMP,
     comments TEXT,
     rating INTEGER,
+    deleted_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -95,6 +100,7 @@ CREATE TABLE IF NOT EXISTS interviews (
     meeting_link TEXT,
     notes TEXT,
     outcome VARCHAR(50),
+    deleted_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -144,8 +150,21 @@ CREATE TABLE IF NOT EXISTS messages (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create documentation_attachments table
+CREATE TABLE IF NOT EXISTS documentation_attachments (
+    id SERIAL PRIMARY KEY,
+    candidate_id INTEGER NOT NULL REFERENCES candidates(id) ON DELETE CASCADE,
+    filename VARCHAR(255) NOT NULL,
+    original_name VARCHAR(255) NOT NULL,
+    file_type VARCHAR(100),
+    file_size INTEGER,
+    uploaded_by INTEGER REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_candidates_vacancy_id ON candidates(vacancy_id);
+CREATE INDEX IF NOT EXISTS idx_candidates_deleted_at ON candidates(deleted_at);
 CREATE INDEX IF NOT EXISTS idx_interview_stages_candidate_id ON interview_stages(candidate_id);
 CREATE INDEX IF NOT EXISTS idx_interviews_candidate_id ON interviews(candidate_id);
 CREATE INDEX IF NOT EXISTS idx_interviews_interviewer_id ON interviews(interviewer_id);

@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS candidates (
     dismissal_date TIMESTAMP,
     parsed_resume_data JSONB,
     created_by INTEGER REFERENCES users(id),
+    deleted_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -115,6 +116,7 @@ CREATE TABLE IF NOT EXISTS interview_stages (
     completed_at TIMESTAMP,
     comments TEXT,
     rating INTEGER,
+    deleted_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -131,6 +133,7 @@ CREATE TABLE IF NOT EXISTS interviews (
     meeting_link TEXT,
     notes TEXT,
     outcome VARCHAR(50),
+    deleted_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -182,8 +185,21 @@ CREATE TABLE IF NOT EXISTS messages (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create documentation_attachments table
+CREATE TABLE IF NOT EXISTS documentation_attachments (
+    id SERIAL PRIMARY KEY,
+    candidate_id INTEGER NOT NULL REFERENCES candidates(id) ON DELETE CASCADE,
+    filename VARCHAR(255) NOT NULL,
+    original_name VARCHAR(255) NOT NULL,
+    file_type VARCHAR(100),
+    file_size INTEGER,
+    uploaded_by INTEGER REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_candidates_vacancy_id ON candidates(vacancy_id);
+CREATE INDEX IF NOT EXISTS idx_candidates_deleted_at ON candidates(deleted_at);
 CREATE INDEX IF NOT EXISTS idx_interview_stages_candidate_id ON interview_stages(candidate_id);
 CREATE INDEX IF NOT EXISTS idx_interviews_candidate_id ON interviews(candidate_id);
 CREATE INDEX IF NOT EXISTS idx_interviews_interviewer_id ON interviews(interviewer_id);
@@ -341,6 +357,62 @@ async function updateExistingTables(): Promise<void> {
       ALTER TABLE candidates 
       ALTER COLUMN email DROP NOT NULL;
     `).catch(() => { }); // Ignore if already nullable
+
+    // Add missing candidate columns for soft deletes and attachments
+    await pool!.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                       WHERE table_name='candidates' AND column_name='photo_url') THEN
+          ALTER TABLE candidates ADD COLUMN photo_url TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                       WHERE table_name='candidates' AND column_name='dismissal_reason') THEN
+          ALTER TABLE candidates ADD COLUMN dismissal_reason TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                       WHERE table_name='candidates' AND column_name='dismissal_date') THEN
+          ALTER TABLE candidates ADD COLUMN dismissal_date TIMESTAMP;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                       WHERE table_name='candidates' AND column_name='deleted_at') THEN
+          ALTER TABLE candidates ADD COLUMN deleted_at TIMESTAMP;
+        END IF;
+      END $$;
+    `).catch(() => { });
+
+    await pool!.query(`
+      CREATE INDEX IF NOT EXISTS idx_candidates_deleted_at ON candidates(deleted_at);
+    `).catch(() => { });
+
+    // Add missing deleted_at columns for interview stages and interviews
+    await pool!.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                       WHERE table_name='interview_stages' AND column_name='deleted_at') THEN
+          ALTER TABLE interview_stages ADD COLUMN deleted_at TIMESTAMP;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                       WHERE table_name='interviews' AND column_name='deleted_at') THEN
+          ALTER TABLE interviews ADD COLUMN deleted_at TIMESTAMP;
+        END IF;
+      END $$;
+    `).catch(() => { });
+
+    // Create documentation_attachments table if it doesn't exist
+    await pool!.query(`
+      CREATE TABLE IF NOT EXISTS documentation_attachments (
+        id SERIAL PRIMARY KEY,
+        candidate_id INTEGER NOT NULL REFERENCES candidates(id) ON DELETE CASCADE,
+        filename VARCHAR(255) NOT NULL,
+        original_name VARCHAR(255) NOT NULL,
+        file_type VARCHAR(100),
+        file_size INTEGER,
+        uploaded_by INTEGER REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
 
     // Update departments unique constraint
     await pool!.query(`
