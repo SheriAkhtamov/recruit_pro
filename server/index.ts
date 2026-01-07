@@ -32,8 +32,9 @@ app.use((req, res, next) => {
 
   // In development, allow all origins. In production, only allow specific origins
   const isDevelopment = app.get('env') === 'development';
-  if (isDevelopment || (origin && allowedOrigins.includes(origin))) {
-    res.header('Access-Control-Allow-Origin', origin || '*');
+  if (origin && (isDevelopment || allowedOrigins.includes(origin))) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Vary', 'Origin');
   }
 
   res.header('Access-Control-Allow-Credentials', 'true');
