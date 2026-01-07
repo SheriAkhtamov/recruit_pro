@@ -13,7 +13,7 @@ export class CandidatesRepository {
    * Get all candidates (excluding soft-deleted)
    */
   async getCandidates(workspaceId?: number): Promise<Candidate[]> {
-    let query = db
+    const baseQuery = db
       .select({
         id: candidates.id,
         workspaceId: candidates.workspaceId,
@@ -31,6 +31,8 @@ export class CandidatesRepository {
         status: candidates.status,
         rejectionReason: candidates.rejectionReason,
         rejectionStage: candidates.rejectionStage,
+        dismissalReason: candidates.dismissalReason,
+        dismissalDate: candidates.dismissalDate,
         parsedResumeData: candidates.parsedResumeData,
         createdBy: candidates.createdBy,
         deletedAt: candidates.deletedAt,
@@ -44,21 +46,23 @@ export class CandidatesRepository {
         },
       })
       .from(candidates)
-      .leftJoin(users, eq(candidates.createdBy, users.id))
-      .where(isNull(candidates.deletedAt)); // Exclude soft-deleted
+      .leftJoin(users, eq(candidates.createdBy, users.id));
 
+    const conditions = [isNull(candidates.deletedAt)];
     if (workspaceId) {
-      query = query.where(and(eq(candidates.workspaceId, workspaceId), isNull(candidates.deletedAt)));
+      conditions.push(eq(candidates.workspaceId, workspaceId));
     }
 
-    return await query.orderBy(desc(candidates.createdAt));
+    return await baseQuery
+      .where(and(...conditions))
+      .orderBy(desc(candidates.createdAt));
   }
 
   /**
    * Get active candidates  only (status = 'active' and not deleted)
    */
   async getActiveCandidates(workspaceId?: number): Promise<Candidate[]> {
-    let query = db
+    const baseQuery = db
       .select({
         id: candidates.id,
         workspaceId: candidates.workspaceId,
@@ -76,6 +80,8 @@ export class CandidatesRepository {
         status: candidates.status,
         rejectionReason: candidates.rejectionReason,
         rejectionStage: candidates.rejectionStage,
+        dismissalReason: candidates.dismissalReason,
+        dismissalDate: candidates.dismissalDate,
         parsedResumeData: candidates.parsedResumeData,
         createdBy: candidates.createdBy,
         deletedAt: candidates.deletedAt,
@@ -92,18 +98,20 @@ export class CandidatesRepository {
       .leftJoin(users, eq(candidates.createdBy, users.id));
 
     if (workspaceId) {
-      query = query.where(
-        and(
-          eq(candidates.status, 'active'),
-          eq(candidates.workspaceId, workspaceId),
-          isNull(candidates.deletedAt)
+      return await baseQuery
+        .where(
+          and(
+            eq(candidates.status, 'active'),
+            eq(candidates.workspaceId, workspaceId),
+            isNull(candidates.deletedAt)
+          )
         )
-      );
-    } else {
-      query = query.where(and(eq(candidates.status, 'active'), isNull(candidates.deletedAt)));
+        .orderBy(desc(candidates.createdAt));
     }
 
-    return await query.orderBy(desc(candidates.createdAt));
+    return await baseQuery
+      .where(and(eq(candidates.status, 'active'), isNull(candidates.deletedAt)))
+      .orderBy(desc(candidates.createdAt));
   }
 
   /**

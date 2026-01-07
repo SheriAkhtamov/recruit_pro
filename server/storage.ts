@@ -11,10 +11,12 @@ import {
   type DocumentationAttachment, type InsertDocumentationAttachment,
   type Workspace, type InsertWorkspace, type SuperAdmin, type InsertSuperAdmin
 } from "@shared/schema";
-import { db } from './db';
+import { getDb } from './db';
 import { logger } from './lib/logger';
 import { t } from './lib/i18n';
 import { eq, and, or, desc, asc, gte, lte, count, sql } from "drizzle-orm";
+
+const db = getDb();
 
 interface StageCountData {
   stageIndex: number;
@@ -190,13 +192,7 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   private ensureDb() {
-    if (!db || typeof (db as any).select !== 'function') {
-      const errorMessage = process.env.DATABASE_URL
-        ? '💥 База данных недоступна. Проверьте подключение к PostgreSQL.'
-        : '⚠️  База данных не настроена. Установите переменную окружения DATABASE_URL в .env';
-      logger.error(errorMessage);
-      throw new Error(errorMessage);
-    }
+    return db;
   }
   // Workspaces implementation
   async getWorkspaces(): Promise<Workspace[]> {
@@ -439,7 +435,7 @@ export class DatabaseStorage implements IStorage {
 
   async getCandidates(workspaceId?: number): Promise<Candidate[]> {
     this.ensureDb();
-    let query = db
+    const baseQuery = db
       .select({
         id: candidates.id,
         workspaceId: candidates.workspaceId,
@@ -457,8 +453,11 @@ export class DatabaseStorage implements IStorage {
         status: candidates.status,
         rejectionReason: candidates.rejectionReason,
         rejectionStage: candidates.rejectionStage,
+        dismissalReason: candidates.dismissalReason,
+        dismissalDate: candidates.dismissalDate,
         parsedResumeData: candidates.parsedResumeData,
         createdBy: candidates.createdBy,
+        deletedAt: candidates.deletedAt,
         createdAt: candidates.createdAt,
         updatedAt: candidates.updatedAt,
         createdByUser: {
@@ -472,10 +471,12 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(candidates.createdBy, users.id));
 
     if (workspaceId) {
-      query = query.where(eq(candidates.workspaceId, workspaceId));
+      return await baseQuery
+        .where(eq(candidates.workspaceId, workspaceId))
+        .orderBy(desc(candidates.createdAt));
     }
 
-    return await query.orderBy(desc(candidates.createdAt));
+    return await baseQuery.orderBy(desc(candidates.createdAt));
   }
 
   async getCandidate(id: number, workspaceId?: number): Promise<Candidate | undefined> {
@@ -496,7 +497,7 @@ export class DatabaseStorage implements IStorage {
    */
   async getActiveCandidates(workspaceId?: number): Promise<Candidate[]> {
     this.ensureDb();
-    let query = db
+    const baseQuery = db
       .select({
         id: candidates.id,
         workspaceId: candidates.workspaceId,
@@ -514,8 +515,11 @@ export class DatabaseStorage implements IStorage {
         status: candidates.status,
         rejectionReason: candidates.rejectionReason,
         rejectionStage: candidates.rejectionStage,
+        dismissalReason: candidates.dismissalReason,
+        dismissalDate: candidates.dismissalDate,
         parsedResumeData: candidates.parsedResumeData,
         createdBy: candidates.createdBy,
+        deletedAt: candidates.deletedAt,
         createdAt: candidates.createdAt,
         updatedAt: candidates.updatedAt,
         createdByUser: {
@@ -529,12 +533,14 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(candidates.createdBy, users.id));
 
     if (workspaceId) {
-      query = query.where(and(eq(candidates.status, 'active'), eq(candidates.workspaceId, workspaceId)));
-    } else {
-      query = query.where(eq(candidates.status, 'active'));
+      return await baseQuery
+        .where(and(eq(candidates.status, 'active'), eq(candidates.workspaceId, workspaceId)))
+        .orderBy(desc(candidates.createdAt));
     }
 
-    return await query.orderBy(desc(candidates.createdAt));
+    return await baseQuery
+      .where(eq(candidates.status, 'active'))
+      .orderBy(desc(candidates.createdAt));
   }
 
 
@@ -581,8 +587,11 @@ export class DatabaseStorage implements IStorage {
         status: candidates.status,
         rejectionReason: candidates.rejectionReason,
         rejectionStage: candidates.rejectionStage,
+        dismissalReason: candidates.dismissalReason,
+        dismissalDate: candidates.dismissalDate,
         parsedResumeData: candidates.parsedResumeData,
         createdBy: candidates.createdBy,
+        deletedAt: candidates.deletedAt,
         createdAt: candidates.createdAt,
         updatedAt: candidates.updatedAt,
         workspaceId: candidates.workspaceId,
@@ -602,7 +611,7 @@ export class DatabaseStorage implements IStorage {
 
   async getCandidatesByStatus(status: string, workspaceId?: number): Promise<Candidate[]> {
     this.ensureDb();
-    let query = db
+    const baseQuery = db
       .select({
         id: candidates.id,
         fullName: candidates.fullName,
@@ -619,10 +628,14 @@ export class DatabaseStorage implements IStorage {
         status: candidates.status,
         rejectionReason: candidates.rejectionReason,
         rejectionStage: candidates.rejectionStage,
+        dismissalReason: candidates.dismissalReason,
+        dismissalDate: candidates.dismissalDate,
         parsedResumeData: candidates.parsedResumeData,
         createdBy: candidates.createdBy,
+        deletedAt: candidates.deletedAt,
         createdAt: candidates.createdAt,
         updatedAt: candidates.updatedAt,
+        workspaceId: candidates.workspaceId,
         createdByUser: {
           id: users.id,
           fullName: users.fullName,
@@ -634,12 +647,14 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(candidates.createdBy, users.id));
 
     if (workspaceId) {
-      query = query.where(and(eq(candidates.status, status), eq(candidates.workspaceId, workspaceId)));
-    } else {
-      query = query.where(eq(candidates.status, status));
+      return await baseQuery
+        .where(and(eq(candidates.status, status), eq(candidates.workspaceId, workspaceId)))
+        .orderBy(desc(candidates.createdAt));
     }
 
-    return await query.orderBy(desc(candidates.createdAt));
+    return await baseQuery
+      .where(eq(candidates.status, status))
+      .orderBy(desc(candidates.createdAt));
   }
 
   async createCandidate(candidate: InsertCandidate): Promise<Candidate> {
@@ -846,7 +861,12 @@ export class DatabaseStorage implements IStorage {
 
       // If stage is completed successfully, move to next stage
       if (updatedStage && stage.status === 'passed') {
-        const candidate = await db.select().from(candidates).where(eq(candidates.id, updatedStage.candidateId)).limit(1);
+        if (updatedStage.candidateId === null) {
+          throw new Error('Candidate ID is missing for this interview stage.');
+        }
+
+        const candidateId = updatedStage.candidateId;
+        const candidate = await db.select().from(candidates).where(eq(candidates.id, candidateId)).limit(1);
         if (candidate[0]) {
           const nextStageIndex = updatedStage.stageIndex + 1;
 
@@ -854,14 +874,14 @@ export class DatabaseStorage implements IStorage {
           await db
             .update(candidates)
             .set({ currentStageIndex: nextStageIndex, updatedAt: new Date() })
-            .where(eq(candidates.id, updatedStage.candidateId));
+            .where(eq(candidates.id, candidateId));
 
           const nextStage = await db
             .select()
             .from(interviewStages)
             .where(
               and(
-                eq(interviewStages.candidateId, updatedStage.candidateId),
+                eq(interviewStages.candidateId, candidateId),
                 eq(interviewStages.stageIndex, nextStageIndex)
               )
             )
@@ -875,8 +895,8 @@ export class DatabaseStorage implements IStorage {
                 type: 'interview_assigned',
                 title: t('newInterview'),
                 message: t('candidatePassedStage', 'ru', { stageName: nextStage[0].stageName }),
-                entityType: 'interview_stage',
-                entityId: nextStage[0].id,
+                relatedEntityType: 'interview_stage',
+                relatedEntityId: nextStage[0].id,
                 isRead: false,
               });
             }
@@ -885,20 +905,24 @@ export class DatabaseStorage implements IStorage {
             await db
               .update(candidates)
               .set({ status: 'documentation', updatedAt: new Date() })
-              .where(eq(candidates.id, updatedStage.candidateId));
+              .where(eq(candidates.id, candidateId));
           }
         }
       } else if (updatedStage && stage.status === 'failed') {
         // Mark candidate as rejected
+        if (updatedStage.candidateId === null) {
+          throw new Error('Candidate ID is missing for this interview stage.');
+        }
+        const candidateId = updatedStage.candidateId;
         await db
           .update(candidates)
           .set({
             status: 'rejected',
-            rejectionStage: updatedStage.stageName,
+            rejectionStage: updatedStage.stageIndex,
             rejectionReason: stage.comments || 'Failed interview stage',
             updatedAt: new Date()
           })
-          .where(eq(candidates.id, updatedStage.candidateId));
+          .where(eq(candidates.id, candidateId));
       }
 
       return updatedStage;
@@ -1050,8 +1074,8 @@ export class DatabaseStorage implements IStorage {
           stageName: stage[0].stageName,
           date: scheduledAt.toLocaleString('ru-RU')
         }),
-        entityType: 'interview',
-        entityId: interview.id,
+        relatedEntityType: 'interview',
+        relatedEntityId: interview.id,
         isRead: false,
       });
 
@@ -1085,8 +1109,10 @@ export class DatabaseStorage implements IStorage {
         dismissalDate: candidates.dismissalDate,
         parsedResumeData: candidates.parsedResumeData,
         createdBy: candidates.createdBy,
+        deletedAt: candidates.deletedAt,
         createdAt: candidates.createdAt,
         updatedAt: candidates.updatedAt,
+        workspaceId: candidates.workspaceId,
       })
       .from(candidates);
 
@@ -1208,8 +1234,8 @@ export class DatabaseStorage implements IStorage {
         type: 'interview_rescheduled',
         title: t('interviewRescheduled'),
         message: t('interviewRescheduledTo', 'ru', { date: newDateTime.toLocaleString('ru-RU') }),
-        entityType: 'interview',
-        entityId: interview.id,
+        relatedEntityType: 'interview',
+        relatedEntityId: interview.id,
         isRead: false,
       });
     }
@@ -1235,7 +1261,7 @@ export class DatabaseStorage implements IStorage {
 
   async getInterviews(workspaceId?: number): Promise<any[]> {
     this.ensureDb();
-    let query = db
+    const baseQuery = db
       .select({
         id: interviews.id,
         stageId: interviews.stageId,
@@ -1280,10 +1306,12 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(interviews.interviewerId, users.id));
 
     if (workspaceId) {
-      query = query.where(eq(candidates.workspaceId, workspaceId));
+      return await baseQuery
+        .where(eq(candidates.workspaceId, workspaceId))
+        .orderBy(interviews.scheduledAt);
     }
 
-    return await query.orderBy(interviews.scheduledAt);
+    return await baseQuery.orderBy(interviews.scheduledAt);
   }
 
   async getInterviewsByInterviewer(interviewerId: number, workspaceId?: number): Promise<any[]> {
@@ -1368,6 +1396,8 @@ export class DatabaseStorage implements IStorage {
           status: interviews.status,
           outcome: interviews.outcome,
           notes: interviews.notes,
+          meetingLink: interviews.meetingLink,
+          deletedAt: interviews.deletedAt,
           createdAt: interviews.createdAt,
           updatedAt: interviews.updatedAt,
         })
@@ -1673,7 +1703,7 @@ export class DatabaseStorage implements IStorage {
       return { averageDays: 0, fastest: 0, median: 0, slowest: 0 };
     }
 
-    const daysDiff = hiredCandidates.map((candidate: Candidate) => {
+    const daysDiff = hiredCandidates.map((candidate) => {
       const created = candidate.createdAt ? new Date(candidate.createdAt) : new Date();
       const hired = candidate.updatedAt ? new Date(candidate.updatedAt) : new Date();
       return Math.ceil((hired.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
@@ -2287,7 +2317,7 @@ export class DatabaseStorage implements IStorage {
 
     // Build result with all stages, showing 0 if no one passed
     const stages = allStages.map((s: any) => ({
-      stageNumber: s.stageIndex + 1,
+      stageName: s.stageName,
       stageIndex: s.stageIndex,
       count: passedCountMap.get(`${s.stageIndex}-${s.stageName}`) || 0,
     }));
