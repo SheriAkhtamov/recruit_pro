@@ -6,6 +6,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase, checkDatabaseConnection } from "./initDatabase";
 import { globalMutationLimiter, readLimiter } from './middleware/rateLimiter';
 import { logger } from './lib/logger';
+import { errorHandler, requestContextMiddleware } from "./middleware/errorHandler";
 
 // FAIL-FAST: Server requires DATABASE_URL to be set
 if (!process.env.DATABASE_URL) {
@@ -51,6 +52,7 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(requestContextMiddleware);
 
 // Rate limiting middleware - защита от DDoS
 // Disabled in development mode
@@ -100,21 +102,7 @@ app.use(morgan(':method :url :status :response-time ms', {
   const server = await registerModularRoutes(app);
 
   // Global error handler with logging
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    // Log error for debugging
-    logger.error('Server Error', {
-      status,
-      message,
-      stack: err.stack,
-      url: _req.url,
-      method: _req.method,
-    });
-
-    res.status(status).json({ message });
-  });
+  app.use(errorHandler);
 
   // Setup vite in development, serve static in production
   if (app.get("env") === "development") {

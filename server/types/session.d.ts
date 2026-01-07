@@ -16,6 +16,7 @@ declare global {
       workspaceId?: number;
       user?: User;
       superAdmin?: SuperAdmin;
+      requestId?: string;
     }
   }
 }
