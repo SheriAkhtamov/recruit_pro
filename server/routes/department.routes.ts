@@ -40,7 +40,7 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
         });
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'CREATE_DEPARTMENT',
             entityType: 'department',
             entityId: department.id,
@@ -71,7 +71,7 @@ router.put('/:id', requireAuth, requireAdmin, async (req, res) => {
         }, req.workspaceId);
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'UPDATE_DEPARTMENT',
             entityType: 'department',
             entityId: departmentId,
@@ -99,7 +99,7 @@ router.delete('/:id', requireAuth, requireAdmin, async (req, res) => {
         await storage.deleteDepartment(departmentId, req.workspaceId);
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'DELETE_DEPARTMENT',
             entityType: 'department',
             entityId: departmentId,

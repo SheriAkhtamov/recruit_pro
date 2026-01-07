@@ -44,7 +44,7 @@ router.post('/', requireAuth, async (req, res) => {
         const stage = await storage.createInterviewStage(stageData);
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'CREATE_INTERVIEW_STAGE',
             entityType: 'interview_stage',
             entityId: stage.id,
@@ -89,7 +89,7 @@ router.put('/:id', requireAuth, async (req, res) => {
         }
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'UPDATE_INTERVIEW_STAGE',
             entityType: 'interview_stage',
             entityId: id,
@@ -121,7 +121,7 @@ router.put('/:id/comments', requireAuth, async (req, res) => {
         const stage = await storage.updateInterviewStage(id, { comments }, req.workspaceId);
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'UPDATE_INTERVIEW_STAGE',
             entityType: 'interview_stage',
             entityId: id,
@@ -155,7 +155,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
         }
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'DELETE_INTERVIEW_STAGE',
             entityType: 'interview_stage',
             entityId: id,

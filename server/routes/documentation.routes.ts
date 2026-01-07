@@ -69,7 +69,7 @@ router.post('/candidates', requireAuth, documentationUpload.fields([
             vacancyId: parseInt(req.body.vacancyId),
             status: 'documentation',
             source: 'manual_documentation',
-            createdBy: req.session!.user!.id,
+            createdBy: req.user!.id,
             photoUrl,
         };
 
@@ -83,13 +83,13 @@ router.post('/candidates', requireAuth, documentationUpload.fields([
                     filename: docUrl.split('/').pop() || 'document', // Changed from fileName to filename
                     originalName: docUrl.split('/').pop() || 'document',
                     fileType: 'document',
-                    uploadedBy: req.session!.user!.id,
+                    uploadedBy: req.user!.id,
                 });
             }
         }
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'CREATE_DOCUMENTATION_CANDIDATE',
             entityType: 'candidate',
             entityId: candidate.id,
@@ -150,7 +150,7 @@ router.put('/candidates/:id', requireAuth, documentationUpload.fields([
                         filename: doc.filename, // Changed from fileName
                         originalName: doc.originalname,
                         fileType: 'document',
-                        uploadedBy: req.session!.user!.id,
+                        uploadedBy: req.user!.id,
                     });
                 }
             }
@@ -159,7 +159,7 @@ router.put('/candidates/:id', requireAuth, documentationUpload.fields([
         const updatedCandidate = await storage.updateCandidate(id, updates);
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'UPDATE_DOCUMENTATION_CANDIDATE',
             entityType: 'candidate',
             entityId: id,
@@ -200,7 +200,7 @@ router.put('/candidates/:id/complete', requireAuth, async (req, res) => {
         });
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'COMPLETE_DOCUMENTATION',
             entityType: 'candidate',
             entityId: id,

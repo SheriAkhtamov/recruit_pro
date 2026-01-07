@@ -58,7 +58,7 @@ router.post('/', requireAdmin, async (req, res) => {
         }
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'CREATE_USER',
             entityType: 'user',
             entityId: newUser.id,
@@ -106,7 +106,7 @@ router.get('/:id/credentials', requireAdmin, async (req, res) => {
 router.put('/:id', requireAuth, async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const currentUser = req.session?.user;
+        const currentUser = req.user;
 
         // Users can only update their own profile, unless they're admin
         if (currentUser?.id !== id && currentUser?.role !== 'admin') {
@@ -140,12 +140,6 @@ router.put('/:id', requireAuth, async (req, res) => {
 
         const updatedUser = await storage.updateUser(id, updateData);
 
-        // Update session if user updated their own profile
-        if (currentUser?.id === id) {
-            req.session.user = { ...req.session.user, ...(authService.sanitizeUser(updatedUser) as any) };
-            req.session.save();
-        }
-
         res.json(authService.sanitizeUser(updatedUser));
     } catch (error) {
         logger.error('Error updating user', { error, userId: req.params.id });
@@ -177,7 +171,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
         }
 
         // Only admins can delete other users
-        if (req.session!.user!.role !== 'admin') {
+        if (req.user!.role !== 'admin') {
             return res.status(403).json({ error: 'Only administrators can delete users' });
         }
 

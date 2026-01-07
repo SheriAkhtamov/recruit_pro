@@ -17,8 +17,8 @@ export function setBroadcastFunction(fn: (data: any) => void) {
 // Get all candidates
 router.get('/', requireAuth, async (req, res) => {
     try {
-        const userRole = req.session!.user!.role;
-        const userId = req.session!.user!.id;
+        const userRole = req.user!.role;
+        const userId = req.user!.id;
 
         let candidates;
 
@@ -41,17 +41,17 @@ router.get('/', requireAuth, async (req, res) => {
 router.get('/interviewer/:id', requireAuth, async (req, res) => {
     try {
         const interviewerId = parseInt(req.params.id);
-        const userId = req.session!.user!.id;
+        const userId = req.user!.id;
 
         // Security check: employees can only see their own assigned candidates
-        if (req.session!.user!.role !== 'admin' && interviewerId !== userId) {
+        if (req.user!.role !== 'admin' && interviewerId !== userId) {
             return res.status(403).json({ error: 'Access denied' });
         }
 
         const candidates = await storage.getCandidatesByInterviewer(interviewerId, req.workspaceId);
         res.json(candidates);
     } catch (error) {
-        logger.error('Failed to fetch interviewer candidates', { error, interviewerId: req.session?.user?.id });
+        logger.error('Failed to fetch interviewer candidates', { error, interviewerId: req.user?.id });
         res.status(500).json({ error: 'Failed to fetch candidates' });
     }
 });
@@ -79,7 +79,7 @@ router.post('/', requireAuth, upload.array('files', 5), async (req, res) => {
             ...req.body,
             workspaceId: req.workspaceId,
             vacancyId: req.body.vacancyId ? parseInt(req.body.vacancyId) : null,
-            createdBy: req.session!.user!.id,
+            createdBy: req.user!.id,
         });
 
         let resumeUrl = '';
@@ -103,7 +103,7 @@ router.post('/', requireAuth, upload.array('files', 5), async (req, res) => {
         });
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'CREATE_CANDIDATE',
             entityType: 'candidate',
             entityId: candidate.id,
@@ -180,7 +180,7 @@ router.put('/:id', requireAuth, upload.array('files', 5), async (req, res) => {
         const candidate = await storage.updateCandidate(id, updates);
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'UPDATE_CANDIDATE',
             entityType: 'candidate',
             entityId: id,
@@ -214,7 +214,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
         await storage.deleteCandidate(id, req.workspaceId!);
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'DELETE_CANDIDATE',
             entityType: 'candidate',
             entityId: id,
@@ -251,7 +251,7 @@ router.put('/:id/hire', requireAuth, async (req, res) => {
         });
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'HIRE_CANDIDATE',
             entityType: 'candidate',
             entityId: candidateId,
@@ -293,7 +293,7 @@ router.put('/:id/dismiss', requireAuth, async (req, res) => {
         });
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'DISMISS_CANDIDATE',
             entityType: 'candidate',
             entityId: candidateId,
@@ -346,7 +346,7 @@ router.put('/:id/move-to-documentation', requireAuth, async (req, res) => {
         });
 
         await storage.createAuditLog({
-            userId: req.session!.user!.id,
+            userId: req.user!.id,
             action: 'MOVE_TO_DOCUMENTATION',
             entityType: 'candidate',
             entityId: candidateId,
