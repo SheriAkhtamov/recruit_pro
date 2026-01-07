@@ -82,13 +82,17 @@ export class InterviewsRepository {
 
         // Auto-progress candidate when stage is passed
         if (updatedStage && stage.status === 'passed') {
+            if (!updatedStage.candidateId) {
+                return updatedStage;
+            }
+
             const candidate = await db
                 .select()
                 .from(candidates)
                 .where(eq(candidates.id, updatedStage.candidateId))
                 .limit(1);
 
-            if (candidate[0]) {
+            if (candidate[0] && updatedStage.candidateId) {
                 const nextStageIndex = updatedStage.stageIndex + 1;
 
                 await db
@@ -128,13 +132,13 @@ export class InterviewsRepository {
                         .where(eq(candidates.id, updatedStage.candidateId));
                 }
             }
-        } else if (updatedStage && stage.status === 'failed') {
+        } else if (updatedStage && stage.status === 'failed' && updatedStage.candidateId) {
             // Mark candidate as rejected
             await db
                 .update(candidates)
                 .set({
                     status: 'rejected',
-                    rejectionStage: updatedStage.stageName,
+                    rejectionStage: updatedStage.stageIndex,
                     rejectionReason: stage.comments || 'Failed interview stage',
                     updatedAt: new Date(),
                 })
@@ -318,18 +322,34 @@ export class InterviewsRepository {
      * Get all interviews
      */
     async getInterviews(workspaceId?: number): Promise<Interview[]> {
-        let query = db
-            .select()
-            .from(interviews)
-            .where(isNull(interviews.deletedAt));
+        const baseQuery = db
+            .select({
+                id: interviews.id,
+                stageId: interviews.stageId,
+                candidateId: interviews.candidateId,
+                interviewerId: interviews.interviewerId,
+                scheduledAt: interviews.scheduledAt,
+                duration: interviews.duration,
+                status: interviews.status,
+                meetingLink: interviews.meetingLink,
+                notes: interviews.notes,
+                outcome: interviews.outcome,
+                deletedAt: interviews.deletedAt,
+                createdAt: interviews.createdAt,
+                updatedAt: interviews.updatedAt,
+            })
+            .from(interviews);
 
         if (workspaceId) {
-            query = query
+            return await baseQuery
                 .innerJoin(candidates, eq(interviews.candidateId, candidates.id))
-                .where(and(eq(candidates.workspaceId, workspaceId), isNull(interviews.deletedAt)));
+                .where(and(eq(candidates.workspaceId, workspaceId), isNull(interviews.deletedAt)))
+                .orderBy(desc(interviews.scheduledAt));
         }
 
-        return await query.orderBy(desc(interviews.scheduledAt));
+        return await baseQuery
+            .where(isNull(interviews.deletedAt))
+            .orderBy(desc(interviews.scheduledAt));
     }
 }
 
