@@ -27,25 +27,39 @@ import { setBroadcastFunction as setMessageBroadcast } from './message.routes';
 
 const PgStore = pgSession(session);
 
-// Session configuration with PostgreSQL store
-const sessionConfig = {
-    secret: process.env.SESSION_SECRET || 'recruit-pro-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    name: 'connect.sid',
-    store: new PgStore({
-        pool: pool!,
-        tableName: 'session',
-        createTableIfMissing: true, // Auto-create session table
-    }),
-    cookie: {
-        secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        sameSite: 'lax' as const,
-        domain: undefined,
-        path: '/',
-    },
+const buildSessionConfig = () => {
+    const sessionSecret = process.env.SESSION_SECRET;
+
+    if (!sessionSecret) {
+        logger.error('SESSION_SECRET is required to start the server.');
+        process.exit(1);
+    }
+
+    if (!pool) {
+        logger.error('Database pool is not initialized for session storage.');
+        process.exit(1);
+    }
+
+    // Session configuration with PostgreSQL store
+    return {
+        secret: sessionSecret,
+        resave: false,
+        saveUninitialized: false,
+        name: 'connect.sid',
+        store: new PgStore({
+            pool,
+            tableName: 'session',
+            createTableIfMissing: true, // Auto-create session table
+        }),
+        cookie: {
+            secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000, // 24 hours
+            sameSite: 'lax' as const,
+            domain: undefined,
+            path: '/',
+        },
+    };
 };
 
 /**
@@ -59,7 +73,7 @@ export async function registerModularRoutes(app: Express): Promise<Server> {
     const WebSocket = await import('ws');
 
     // Apply session middleware
-    app.use(session(sessionConfig));
+    app.use(session(buildSessionConfig()));
 
     // NOTE: Mock mode backdoor removed for security. 
     // Server now requires DATABASE_URL to be set.
