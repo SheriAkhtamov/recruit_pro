@@ -13,8 +13,8 @@ export class AuthService {
     return bcrypt.compare(password, hashedPassword);
   }
 
-  async authenticateUser(email: string, password: string, workspaceId?: number): Promise<User | null> {
-    const user = await storage.getUserByEmail(email, workspaceId);
+  async authenticateUser(loginOrEmail: string, password: string, workspaceId?: number): Promise<User | null> {
+    const user = await storage.getUserByLoginOrEmail(loginOrEmail, workspaceId);
     if (!user || !user.isActive) {
       return null;
     }

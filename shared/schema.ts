@@ -351,7 +351,7 @@ export const insertUserSchema = z.object({
   password: z.string().min(1),
   fullName: z.string().min(1),
   phone: z.string().optional(),
-  dateOfBirth: z.union([z.string(), z.date()]).optional().nullable(),
+  dateOfBirth: z.coerce.date().optional().nullable(),
   position: z.string().optional(),
   role: z.enum(['admin', 'hr_manager', 'employee']).default('employee'),
   hasReportAccess: z.boolean().default(false),

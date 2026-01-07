@@ -25,6 +25,7 @@ export interface IStorage {
   // Users
   getUser(id: number, workspaceId?: number): Promise<User | undefined>;
   getUserByEmail(email: string, workspaceId?: number): Promise<User | undefined>;
+  getUserByLoginOrEmail(loginOrEmail: string, workspaceId?: number): Promise<User | undefined>;
   getUsers(workspaceId?: number): Promise<User[]>;
   getUserWithPassword(id: number, workspaceId?: number): Promise<User | undefined>;
   getWorkspaceAdminUser(workspaceId: number): Promise<User | undefined>;

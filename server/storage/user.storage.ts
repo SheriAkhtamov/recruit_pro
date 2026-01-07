@@ -4,7 +4,7 @@ import {
     type User,
     type InsertUser,
 } from '@shared/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, or } from 'drizzle-orm';
 
 export class UserStorage {
     async getUser(id: number, workspaceId?: number): Promise<User | undefined> {
@@ -20,6 +20,16 @@ export class UserStorage {
         const conditions = workspaceId
             ? and(eq(users.email, email), eq(users.workspaceId, workspaceId))
             : eq(users.email, email);
+
+        const result = await db.select().from(users).where(conditions!);
+        return result[0];
+    }
+
+    async getUserByLoginOrEmail(loginOrEmail: string, workspaceId?: number): Promise<User | undefined> {
+        const loginCondition = or(eq(users.email, loginOrEmail), eq(users.username, loginOrEmail));
+        const conditions = workspaceId
+            ? and(loginCondition, eq(users.workspaceId, workspaceId))
+            : loginCondition;
 
         const result = await db.select().from(users).where(conditions!);
         return result[0];

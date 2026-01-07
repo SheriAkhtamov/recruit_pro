@@ -43,7 +43,7 @@ export default function Login() {
       devLog('[LOGIN] Attempting login for:', data.login);
 
       // First, try super admin login
-      const superAdminResponse = await fetch('/api/super-admin/login', {
+      const superAdminResponse = await fetch('/api/auth/super-admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

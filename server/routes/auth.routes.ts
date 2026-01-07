@@ -28,10 +28,19 @@ const superAdminLimiter = rateLimit({
 // Regular user authentication
 router.post('/login', loginLimiter, async (req, res) => {
     try {
-        const { email, password, workspaceId } = req.body;
+        const { login, email, password, workspaceId } = req.body;
+        const loginOrEmail = login || email;
+
+        if (!loginOrEmail) {
+            return res.status(400).json({ error: 'Login is required' });
+        }
+
+        if (!password) {
+            return res.status(400).json({ error: 'Password is required' });
+        }
 
         // If workspaceId is provided, authenticate within that workspace
-        const user = await authService.authenticateUser(email, password, workspaceId);
+        const user = await authService.authenticateUser(loginOrEmail, password, workspaceId);
 
         if (!user) {
             return res.status(401).json({ error: 'Invalid credentials' });
@@ -71,6 +80,14 @@ router.get('/me', requireAuth, (req, res) => {
 router.post('/super-admin/login', superAdminLimiter, async (req, res) => {
     try {
         const { username, password } = req.body;
+
+        if (!username) {
+            return res.status(400).json({ error: 'Username is required' });
+        }
+
+        if (!password) {
+            return res.status(400).json({ error: 'Password is required' });
+        }
 
         const superAdmin = await superAuthService.authenticateSuperAdmin(username, password);
 
