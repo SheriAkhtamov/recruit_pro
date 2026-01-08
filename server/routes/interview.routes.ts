@@ -121,9 +121,9 @@ router.put('/:id', requireAuth, async (req, res) => {
                 userId: oldInterview.interviewerId,
                 type: 'interview_rescheduled',
                 title: t('interviewRescheduled'),
-                message: t('interviewWithCandidateRescheduled', 'ru', {
+                message: t('interviewWithCandidateRescheduled', {
                     candidateName: candidate?.fullName || t('candidateName'),
-                    date: new Date(updates.scheduledAt).toLocaleString('ru-RU')
+                    date: new Date(updates.scheduledAt).toLocaleString()
                 }),
                 relatedEntityType: 'interview',
                 relatedEntityId: interview.id,
@@ -171,9 +171,9 @@ router.put('/:id/reschedule', requireAuth, async (req, res) => {
                 userId: oldInterview.interviewerId,
                 type: 'interview_rescheduled',
                 title: t('interviewRescheduled'),
-                message: t('interviewWithCandidateRescheduled', 'ru', {
+                message: t('interviewWithCandidateRescheduled', {
                     candidateName: candidate?.fullName || t('candidateName'),
-                    date: new Date(newDateTime).toLocaleString('ru-RU')
+                    date: new Date(newDateTime).toLocaleString()
                 }),
                 relatedEntityType: 'interview',
                 relatedEntityId: interview.id,

@@ -68,9 +68,12 @@ export const storage = {
 
     // Message operations (modular)
     getConversations: messageStorage.getConversations.bind(messageStorage),
+    getConversationsByUser: messageStorage.getConversations.bind(messageStorage),
     getMessagesBetweenUsers: messageStorage.getMessagesBetweenUsers.bind(messageStorage),
     createMessage: messageStorage.createMessage.bind(messageStorage),
     updateMessage: messageStorage.updateMessage.bind(messageStorage),
+    markMessageAsRead: async (id: number, userId: number) =>
+        messageStorage.updateMessage(id, { isRead: true }),
 
     // Candidate operations (legacy - still in storage.ts)
     getCandidates: legacyStorageInstance.getCandidates.bind(legacyStorageInstance),
@@ -93,6 +96,7 @@ export const storage = {
     getInterviews: legacyStorageInstance.getInterviews.bind(legacyStorageInstance),
     getInterview: legacyStorageInstance.getInterview.bind(legacyStorageInstance),
     updateInterview: legacyStorageInstance.updateInterview.bind(legacyStorageInstance),
+    rescheduleInterview: legacyStorageInstance.rescheduleInterview.bind(legacyStorageInstance),
     scheduleInterview: legacyStorageInstance.scheduleInterview.bind(legacyStorageInstance),
     getInterviewsByStage: legacyStorageInstance.getInterviewsByStage.bind(legacyStorageInstance),
 

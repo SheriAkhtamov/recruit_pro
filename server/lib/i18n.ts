@@ -84,6 +84,10 @@ const translations = {
         en: 'Candidate updated successfully',
         ru: 'Кандидат успешно обновлен',
     },
+    failedInterviewStage: {
+        en: 'Failed interview stage',
+        ru: 'Провален этап собеседования',
+    },
 
     // Additional common phrases
     failed: {
@@ -106,14 +110,17 @@ type TranslationKey = keyof typeof translations;
  */
 export function t(
     key: TranslationKey,
-    lang: Language = 'ru',
+    langOrParams: Language | Record<string, string> = 'ru',
     params?: Record<string, string>
 ): string {
+    const lang = typeof langOrParams === 'object' ? 'ru' : langOrParams;
+    const resolvedParams = typeof langOrParams === 'object' ? langOrParams : params;
+
     let text: string = translations[key]?.[lang] || translations[key]?.['en'] || key;
 
     // Replace parameters if provided
-    if (params) {
-        Object.entries(params).forEach(([paramKey, value]) => {
+    if (resolvedParams) {
+        Object.entries(resolvedParams).forEach(([paramKey, value]) => {
             text = text.replace(`{${paramKey}}`, value);
         });
     }

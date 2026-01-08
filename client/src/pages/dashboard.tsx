@@ -348,7 +348,7 @@ export default function Dashboard() {
                         })}
                       </p>
                       <p className="text-xs text-slate-500">
-                        {t('with')} {interview.interviewer?.fullName || 'Interviewer TBD'}
+                        {t('with')} {interview.interviewer?.fullName || t('interviewerTBD')}
                       </p>
                     </div>
                   </div>

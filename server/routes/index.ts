@@ -15,6 +15,7 @@ import authRoutes from './auth.routes';
 import fileRoutes, { uploadsMiddleware } from './file.routes';
 import messageRoutes from './message.routes';
 import departmentRoutes from './department.routes';
+import workspaceRoutes from './workspace/workspace.routes';
 import { logger } from '../lib/logger';
 
 // Import broadcast setters
@@ -91,6 +92,7 @@ export async function registerModularRoutes(app: Express): Promise<Server> {
     app.use('/api/super-admin', superAdminRoutes);
     app.use('/api/files', fileRoutes);
     app.use('/api/messages', messageRoutes);
+    app.use('/api/workspace', workspaceRoutes);
     app.use('/uploads', uploadsMiddleware);
 
     const httpServer = createServer(app);
