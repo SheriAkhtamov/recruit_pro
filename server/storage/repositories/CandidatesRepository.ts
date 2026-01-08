@@ -6,13 +6,18 @@
 import { db } from '../../db';
 import { candidates, interviewStages, interviews, users } from '@shared/schema';
 import type { Candidate, InsertCandidate } from '@shared/schema';
-import { eq, and, desc, isNull } from 'drizzle-orm';
+import { eq, and, desc, isNull, sql } from 'drizzle-orm';
 
 export class CandidatesRepository {
   /**
    * Get all candidates (excluding soft-deleted)
    */
   async getCandidates(workspaceId?: number): Promise<Candidate[]> {
+    const interviewCount = sql<number>`(
+      SELECT COUNT(*)
+      FROM ${interviews}
+      WHERE ${interviews.candidateId} = ${candidates.id}
+    )`.as('interviewCount');
     const baseQuery = db
       .select({
         id: candidates.id,
@@ -38,6 +43,7 @@ export class CandidatesRepository {
         deletedAt: candidates.deletedAt,
         createdAt: candidates.createdAt,
         updatedAt: candidates.updatedAt,
+        interviewCount,
         createdByUser: {
           id: users.id,
           fullName: users.fullName,
@@ -49,14 +55,16 @@ export class CandidatesRepository {
       .leftJoin(users, eq(candidates.createdBy, users.id));
 
     if (workspaceId) {
-      return await baseQuery
+      const results = await baseQuery
         .where(and(eq(candidates.workspaceId, workspaceId), isNull(candidates.deletedAt)))
         .orderBy(desc(candidates.createdAt));
+      return results.map(({ interviewCount: _count, ...candidate }) => candidate);
     }
 
-    return await baseQuery
+    const results = await baseQuery
       .where(isNull(candidates.deletedAt))
       .orderBy(desc(candidates.createdAt));
+    return results.map(({ interviewCount: _count, ...candidate }) => candidate);
   }
 
   /**

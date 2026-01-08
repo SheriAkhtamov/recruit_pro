@@ -84,6 +84,7 @@ export function PhotoUploadModal({ isOpen, onClose, onPhotoUploaded, candidateId
   const [imageSrc, setImageSrc] = useState<string>('');
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
+  const [lastCrop, setLastCrop] = useState<CropData | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -260,7 +261,10 @@ export function PhotoUploadModal({ isOpen, onClose, onPhotoUploaded, candidateId
                 <ReactCrop
                   crop={crop}
                   onChange={(_, percentCrop) => setCrop(percentCrop)}
-                  onComplete={(c) => setCompletedCrop(c)}
+                  onComplete={(c) => {
+                    setCompletedCrop(c);
+                    setLastCrop({ x: c.x, y: c.y, width: c.width, height: c.height });
+                  }}
                   aspect={1} // 1:1 aspect ratio
                   circularCrop={false}
                   keepSelection={true}
@@ -285,6 +289,11 @@ export function PhotoUploadModal({ isOpen, onClose, onPhotoUploaded, candidateId
                   <li>The image will be cropped to a square (1:1) format</li>
                   <li>Make sure the face is clearly visible in the crop area</li>
                 </ul>
+                {lastCrop && (
+                  <p className="mt-2 text-xs text-blue-600">
+                    Crop size: {Math.round(lastCrop.width)}×{Math.round(lastCrop.height)}px
+                  </p>
+                )}
               </div>
             </div>
           )}

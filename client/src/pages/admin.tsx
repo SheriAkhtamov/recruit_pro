@@ -139,9 +139,14 @@ export default function Admin() {
     queryKey: ['/api/users'],
   });
 
-  const { data: systemSettings = [], isLoading: settingsLoading } = useQuery({
+  const { data: systemSettings = [], isLoading: settingsLoading } = useQuery<any[]>({
     queryKey: ['/api/system-settings'],
   });
+
+  const activeUserCount = users.filter((user: any) => user.isActive).length;
+  const inactiveUserCount = users.length - activeUserCount;
+  const settingsCount = systemSettings.length;
+  const settingsSnapshotTime = new Date().toLocaleTimeString();
 
   const createUserMutation = useMutation({
     mutationFn: async (data: z.infer<ReturnType<typeof createUserSchema>>) => {
@@ -610,6 +615,36 @@ export default function Admin() {
             )}
           </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="p-4 flex items-center space-x-3">
+                <UserCheck className="h-5 w-5 text-emerald-600" />
+                <div>
+                  <p className="text-sm text-slate-500">{t('activeUsers')}</p>
+                  <p className="text-lg font-semibold text-slate-900">{activeUserCount}</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 flex items-center space-x-3">
+                <UserX className="h-5 w-5 text-amber-600" />
+                <div>
+                  <p className="text-sm text-slate-500">{t('inactiveUsers')}</p>
+                  <p className="text-lg font-semibold text-slate-900">{inactiveUserCount}</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4 flex items-center space-x-3">
+                <Clock className="h-5 w-5 text-slate-500" />
+                <div>
+                  <p className="text-sm text-slate-500">{t('lastUpdated')}</p>
+                  <p className="text-lg font-semibold text-slate-900">{settingsSnapshotTime}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* User Filters */}
           <Card>
             <CardContent className="p-4">
@@ -786,7 +821,10 @@ export default function Admin() {
         <TabsContent value="settings" className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">{t('systemSettings')}</h2>
+              <div className="flex items-center space-x-2">
+                <h2 className="text-xl font-semibold text-slate-900">{t('systemSettings')}</h2>
+                <span className="text-xs text-slate-500">{settingsCount}</span>
+              </div>
               <p className="text-sm text-slate-500">
                 {t('configureSettings')}
               </p>

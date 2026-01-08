@@ -32,7 +32,6 @@ import {
   format,
   addDays,
   startOfWeek,
-  isSameDay,
   isToday,
   parseISO,
   addWeeks,
@@ -97,11 +96,12 @@ function MonthView({
   });
 
   const getInterviewsForDate = (date: Date) => {
+    const interval = { start: startOfDay(date), end: endOfDay(date) };
     const dayInterviews = interviews.filter((interview: any) => {
       if (!interview.scheduledAt) return false;
       if (interview.status === 'completed') return false; // Hide completed interviews
       try {
-        return isSameDay(parseISO(interview.scheduledAt), date);
+        return isWithinInterval(parseISO(interview.scheduledAt), interval);
       } catch (error) {
         devLog('Error parsing date:', interview.scheduledAt, error);
         return false;
@@ -135,16 +135,22 @@ function MonthView({
           const dayInterviews = getInterviewsForDate(date);
           const isCurrentMonth = isSameMonth(date, currentDate);
           const isCurrentDay = isToday(date);
+          const dayOfWeek = getDay(date);
+          const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
           return (
             <div
               key={date.toISOString()}
+              data-index={index}
               className={`min-h-32 p-2 border-r border-b last:border-r-0 ${!isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'
-                } ${isCurrentDay ? 'bg-blue-50' : ''}`}
+                } ${isCurrentDay ? 'bg-blue-50' : ''} ${isWeekend ? 'bg-slate-50' : ''}`}
             >
               <div className={`text-sm mb-1 ${isCurrentDay ? 'text-blue-600 font-bold' : ''}`}>
                 {format(date, 'd')}
               </div>
+              {dayInterviews.length >= 3 && (
+                <Star className="h-3 w-3 text-amber-500 mb-1" />
+              )}
               <div className="space-y-1 max-h-24 overflow-y-auto">
                 {dayInterviews.map((interview) => (
                   <InterviewEvent

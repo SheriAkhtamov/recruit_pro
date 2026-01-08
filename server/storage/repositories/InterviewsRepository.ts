@@ -49,6 +49,11 @@ export class InterviewsRepository {
             .orderBy(asc(interviewStages.stageIndex));
     }
 
+    async createInterview(interview: InsertInterview): Promise<Interview> {
+        const [created] = await db.insert(interviews).values(interview).returning();
+        return created;
+    }
+
     /**
      * Create interview stage
      */

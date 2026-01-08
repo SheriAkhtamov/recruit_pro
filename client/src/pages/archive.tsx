@@ -189,7 +189,12 @@ export default function ArchivePage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <Archive className="h-6 w-6 text-slate-600" />
-          <h1 className="text-2xl font-semibold text-slate-900">{t('candidateArchive')}</h1>
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900">{t('candidateArchive')}</h1>
+            <p className="text-xs text-slate-500">
+              {format(new Date(), 'dd MMMM yyyy', { locale })}
+            </p>
+          </div>
         </div>
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">

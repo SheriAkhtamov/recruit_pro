@@ -205,6 +205,7 @@ export default function CandidateCard({ candidate, onEdit, onDelete }: Candidate
   const currentStage = typedStages.find((stage: any) => stage.stageIndex === candidate.currentStageIndex);
   const nextStage = typedStages.find((stage: any) => stage.stageIndex === candidate.currentStageIndex + 1);
   const isCurrentStageManager = currentStage && user && currentStage.interviewerId === user.id;
+  const canApprove = currentStage && user ? canApproveInterview(user, currentStage.interviewerId) : false;
   const isCreator = candidate.createdBy === user?.id;
 
   // Function to determine candidate visual status for color indicators
@@ -455,6 +456,7 @@ export default function CandidateCard({ candidate, onEdit, onDelete }: Candidate
                     size="icon"
                     onClick={(e) => {
                       e.stopPropagation();
+                      onEdit();
                       setShowEditModal(true);
                     }}
                   >
@@ -491,10 +493,13 @@ export default function CandidateCard({ candidate, onEdit, onDelete }: Candidate
                       // Use stages data if available, otherwise fallback to candidate.interviewStageChain
                       const stageInfo = typedStages.length > 0 ? stage : stage;
                       const stageName = typedStages.length > 0 ? stage.stageName : stage.stageName;
+                      const stageLabel = stageInfo?.status ? `${stageName} (${stageInfo.status})` : stageName;
 
                       return (
                         <div key={index} className="flex items-center">
-                          <div className={`
+                          <div
+                            title={stageLabel}
+                            className={`
                             w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium
                             ${index < candidate.currentStageIndex
                               ? 'bg-green-100 text-green-700'
@@ -502,7 +507,8 @@ export default function CandidateCard({ candidate, onEdit, onDelete }: Candidate
                                 ? 'bg-blue-100 text-blue-700'
                                 : 'bg-gray-100 text-gray-500'
                             }
-                          `}>
+                          `}
+                          >
                             {index < candidate.currentStageIndex ? (
                               <CheckCircle className="h-4 w-4" />
                             ) : (
@@ -682,7 +688,7 @@ export default function CandidateCard({ candidate, onEdit, onDelete }: Candidate
                   )}
 
                   {/* Approve/Reject Buttons - only for current stage interviewer */}
-                  {isCurrentStageManager && currentStage && currentStage.scheduledAt && (
+                  {isCurrentStageManager && canApprove && currentStage && currentStage.scheduledAt && (
                     <>
                       <Button
                         size="sm"
@@ -713,7 +719,7 @@ export default function CandidateCard({ candidate, onEdit, onDelete }: Candidate
                   )}
 
                   {/* Reschedule Button - for everyone else when interview is scheduled */}
-                  {!isCurrentStageManager && currentStage && currentStage.scheduledAt && (
+                  {(!isCurrentStageManager || !canApprove) && currentStage && currentStage.scheduledAt && (
                     <Button
                       size="sm"
                       onClick={(e) => {

@@ -14,6 +14,10 @@ export const diskStorage = multer.diskStorage({
     if (!fs.existsSync('uploads/')) {
       fs.mkdirSync('uploads/', { recursive: true });
     }
+    const requestId = req.headers['x-request-id'];
+    if (requestId && process.env.NODE_ENV !== 'production') {
+      console.debug(`Upload request ${requestId} for ${file.originalname}`);
+    }
     cb(null, 'uploads/');
   },
   filename: (req, file, cb) => {
@@ -21,7 +25,9 @@ export const diskStorage = multer.diskStorage({
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname);
     const baseName = path.basename(file.originalname, ext);
-    cb(null, `${baseName}-${uniqueSuffix}${ext}`);
+    const workspaceId = (req as any).workspaceId;
+    const workspacePrefix = workspaceId ? `ws-${workspaceId}-` : '';
+    cb(null, `${workspacePrefix}${baseName}-${uniqueSuffix}${ext}`);
   }
 });
 
@@ -32,13 +38,19 @@ export const photoStorage = multer.diskStorage({
     if (!fs.existsSync('uploads/photos/')) {
       fs.mkdirSync('uploads/photos/', { recursive: true });
     }
+    const requestId = req.headers['x-request-id'];
+    if (requestId && process.env.NODE_ENV !== 'production') {
+      console.debug(`Photo upload request ${requestId} for ${file.originalname}`);
+    }
     cb(null, 'uploads/photos/');
   },
   filename: (req, file, cb) => {
     // Generate unique filename for photos
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname);
-    cb(null, `photo-${uniqueSuffix}${ext}`);
+    const workspaceId = (req as any).workspaceId;
+    const workspacePrefix = workspaceId ? `ws-${workspaceId}-` : '';
+    cb(null, `${workspacePrefix}photo-${uniqueSuffix}${ext}`);
   }
 });
 
@@ -47,6 +59,9 @@ export const imageFileFilter = (req: Request, file: MulterFile, cb: FileFilterCa
   if (file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug(`Blocked non-image upload from ${req.ip}: ${file.mimetype}`);
+    }
     cb(new Error('Only image files are allowed!'));
   }
 };
@@ -65,6 +80,9 @@ export const documentFileFilter = (req: Request, file: MulterFile, cb: FileFilte
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug(`Blocked document upload from ${req.ip}: ${file.mimetype}`);
+    }
     cb(new Error('Only PDF, Word, text files and images are allowed!'));
   }
 };

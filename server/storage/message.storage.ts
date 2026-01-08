@@ -5,7 +5,22 @@ import { eq, or, and, desc, sql } from 'drizzle-orm';
 export class MessageStorage {
     async getConversations(userId: number, workspaceId?: number): Promise<any[]> {
         // Get unique conversations for the user
-        const query = sql`
+        const query = workspaceId ? sql`
+      SELECT DISTINCT 
+        CASE 
+          WHEN ${messages.senderId} = ${userId} THEN ${messages.receiverId}
+          ELSE ${messages.senderId}
+        END as partner_id,
+        MAX(${messages.createdAt}) as last_message_time
+      FROM ${messages}
+      INNER JOIN ${users} sender ON sender.id = ${messages.senderId}
+      INNER JOIN ${users} receiver ON receiver.id = ${messages.receiverId}
+      WHERE (${messages.senderId} = ${userId} OR ${messages.receiverId} = ${userId})
+        AND sender.workspace_id = ${workspaceId}
+        AND receiver.workspace_id = ${workspaceId}
+      GROUP BY partner_id
+      ORDER BY last_message_time DESC
+    ` : sql`
       SELECT DISTINCT 
         CASE 
           WHEN ${messages.senderId} = ${userId} THEN ${messages.receiverId}
@@ -23,7 +38,7 @@ export class MessageStorage {
     }
 
     async getMessagesBetweenUsers(senderId: number, receiverId: number, workspaceId?: number): Promise<Message[]> {
-        return db
+        const results = await db
             .select()
             .from(messages)
             .where(
@@ -32,7 +47,11 @@ export class MessageStorage {
                     and(eq(messages.senderId, receiverId), eq(messages.receiverId, senderId))
                 )
             )
-            .orderBy(messages.createdAt);
+            .orderBy(desc(messages.createdAt));
+        if (workspaceId) {
+            return results.reverse();
+        }
+        return results.reverse();
     }
 
     async createMessage(message: InsertMessage): Promise<Message> {

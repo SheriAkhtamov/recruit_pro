@@ -111,13 +111,19 @@ router.put('/:id', requireAuth, async (req, res) => {
         const interview = await storage.updateInterview(id, updates);
 
         // Handle reschedule notifications
-        if (isReschedule && oldInterview) {
-            // Get candidate and interviewer details for notifications
-            const candidate = await storage.getCandidate(oldInterview.candidateId, req.workspaceId);
-            const interviewer = await storage.getUser(oldInterview.interviewerId, req.workspaceId);
+            if (isReschedule && oldInterview) {
+                // Get candidate and interviewer details for notifications
+                const candidate = await storage.getCandidate(oldInterview.candidateId, req.workspaceId);
+                const interviewer = await storage.getUser(oldInterview.interviewerId, req.workspaceId);
+                const interviewerName = interviewer?.fullName || 'Unknown interviewer';
+                logger.info('Interview rescheduled', {
+                    interviewId: interview.id,
+                    interviewerId: oldInterview.interviewerId,
+                    interviewerName,
+                });
 
-            // Create in-app notification for interviewer
-            await storage.createNotification({
+                // Create in-app notification for interviewer
+                await storage.createNotification({
                 userId: oldInterview.interviewerId,
                 type: 'interview_rescheduled',
                 title: t('interviewRescheduled'),

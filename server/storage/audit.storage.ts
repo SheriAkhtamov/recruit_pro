@@ -1,6 +1,6 @@
 import { db } from '../db';
 import { auditLogs, type AuditLog, type InsertAuditLog } from '@shared/schema';
-import { eq, desc } from 'drizzle-orm';
+import { and, eq, desc } from 'drizzle-orm';
 
 export class AuditStorage {
     async getAuditLogs(workspaceId?: number): Promise<AuditLog[]> {
@@ -23,7 +23,7 @@ export class AuditStorage {
         return db
             .select()
             .from(auditLogs)
-            .where(eq(auditLogs.entityType, entityType))
+            .where(and(eq(auditLogs.entityType, entityType), eq(auditLogs.entityId, entityId)))
             .orderBy(desc(auditLogs.createdAt));
     }
 

@@ -65,5 +65,8 @@ export class WorkspacesRepository {
     
     // Note: Due to cascade deletes, this will also delete all related data
     // (users, vacancies, candidates, interviews, etc.)
+    if (result.rowCount === 0) {
+      throw new Error("Workspace not found");
+    }
   }
 }

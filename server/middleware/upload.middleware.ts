@@ -9,6 +9,10 @@ export const diskStorage = multer.diskStorage({
         if (!fs.existsSync('uploads/')) {
             fs.mkdirSync('uploads/', { recursive: true });
         }
+        const requestId = req.headers['x-request-id'];
+        if (requestId && process.env.NODE_ENV !== 'production') {
+            console.debug(`Upload request ${requestId} for ${file.originalname}`);
+        }
         cb(null, 'uploads/');
     },
     filename: (req, file, cb) => {
@@ -16,7 +20,9 @@ export const diskStorage = multer.diskStorage({
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         const ext = path.extname(file.originalname);
         const baseName = path.basename(file.originalname, ext);
-        cb(null, `${baseName}-${uniqueSuffix}${ext}`);
+        const workspaceId = (req as any).workspaceId;
+        const workspacePrefix = workspaceId ? `ws-${workspaceId}-` : '';
+        cb(null, `${workspacePrefix}${baseName}-${uniqueSuffix}${ext}`);
     },
 });
 
@@ -37,6 +43,9 @@ export const upload = multer({
         ];
 
         const isAllowed = allowedTypes.includes(file.mimetype);
+        if (!isAllowed && process.env.NODE_ENV !== 'production') {
+            console.debug(`Rejected upload from ${req.ip} with type ${file.mimetype}`);
+        }
 
         cb(null, isAllowed);
     },
@@ -49,13 +58,19 @@ export const photoStorage = multer.diskStorage({
         if (!fs.existsSync('uploads/photos/')) {
             fs.mkdirSync('uploads/photos/', { recursive: true });
         }
+        const requestId = req.headers['x-request-id'];
+        if (requestId && process.env.NODE_ENV !== 'production') {
+            console.debug(`Photo upload request ${requestId} for ${file.originalname}`);
+        }
         cb(null, 'uploads/photos/');
     },
     filename: (req, file, cb) => {
         // Generate unique filename for photos
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         const ext = path.extname(file.originalname);
-        cb(null, `photo-${uniqueSuffix}${ext}`);
+        const workspaceId = (req as any).workspaceId;
+        const workspacePrefix = workspaceId ? `ws-${workspaceId}-` : '';
+        cb(null, `${workspacePrefix}photo-${uniqueSuffix}${ext}`);
     },
 });
 
@@ -73,6 +88,9 @@ export const uploadPhoto = multer({
         ];
 
         const isAllowed = allowedPhotoTypes.includes(file.mimetype);
+        if (!isAllowed && process.env.NODE_ENV !== 'production') {
+            console.debug(`Rejected photo upload from ${req.ip} with type ${file.mimetype}`);
+        }
 
         cb(null, isAllowed);
     },
@@ -94,16 +112,21 @@ export const documentationUpload = multer({
                 }
                 cb(null, 'uploads/');
             }
+            if (process.env.NODE_ENV !== 'production') {
+                console.debug(`Documentation upload from ${req.ip} for ${file.fieldname}`);
+            }
         },
         filename: (req, file, cb) => {
             const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
             const ext = path.extname(file.originalname);
+            const workspaceId = (req as any).workspaceId;
+            const workspacePrefix = workspaceId ? `ws-${workspaceId}-` : '';
 
             if (file.fieldname === 'photo') {
-                cb(null, `photo-${uniqueSuffix}${ext}`);
+                cb(null, `${workspacePrefix}photo-${uniqueSuffix}${ext}`);
             } else {
                 const baseName = path.basename(file.originalname, ext);
-                cb(null, `${baseName}-${uniqueSuffix}${ext}`);
+                cb(null, `${workspacePrefix}${baseName}-${uniqueSuffix}${ext}`);
             }
         },
     }),
@@ -124,6 +147,9 @@ export const documentationUpload = multer({
                 'text/plain'
             ];
             const isAllowed = allowedDocTypes.includes(file.mimetype);
+            if (!isAllowed && process.env.NODE_ENV !== 'production') {
+                console.debug(`Rejected documentation upload from ${req.ip} with type ${file.mimetype}`);
+            }
             cb(null, isAllowed);
         }
     },

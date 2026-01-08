@@ -63,6 +63,14 @@ const buildSessionConfig = () => {
     };
 };
 
+const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
+    logger.error('Unhandled error:', { error: err, path: req.path, method: req.method });
+    if (process.env.NODE_ENV !== 'production') {
+        return next(err);
+    }
+    res.status(500).json({ error: 'Internal server error' });
+};
+
 /**
  * Register all application routes
  * 
@@ -94,6 +102,7 @@ export async function registerModularRoutes(app: Express): Promise<Server> {
     app.use('/api/messages', messageRoutes);
     app.use('/api/workspace', workspaceRoutes);
     app.use('/uploads', uploadsMiddleware);
+    app.use(errorHandler);
 
     const httpServer = createServer(app);
 

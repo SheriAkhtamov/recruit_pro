@@ -135,6 +135,10 @@ export default function AddCandidateModal({ open, onOpenChange }: AddCandidateMo
       setAttachedFiles([]);
       setSelectedPhotoFile(null);
       setPhotoPreviewUrl('');
+      if (!selectedPhotoFile && data.id) {
+        setTempCandidateId(data.id);
+        setIsPhotoUploadOpen(true);
+      }
     },
     onError: (error: any) => {
       devLog('Error creating candidate:', error);
@@ -146,10 +150,18 @@ export default function AddCandidateModal({ open, onOpenChange }: AddCandidateMo
     },
   });
 
+  const handlePhotoUploaded = (photoUrl: string) => {
+    setPhotoPreviewUrl(photoUrl);
+    setIsPhotoUploadOpen(false);
+  };
+
   const handleAddStage = () => {
     if (currentStage.stageName && currentStage.interviewerId) {
       const stages = form.getValues('interviewStageChain');
       const interviewer = interviewers.find((u: any) => u.id === currentStage.interviewerId);
+      if (interviewer) {
+        devLog('Selected interviewer:', interviewer.fullName);
+      }
 
       form.setValue('interviewStageChain', [
         ...stages,
@@ -268,17 +280,18 @@ export default function AddCandidateModal({ open, onOpenChange }: AddCandidateMo
   const stages = form.watch('interviewStageChain');
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{t('addCandidateTitle')}</DialogTitle>
-          <DialogDescription>
-            {t('createCandidateProfile')}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t('addCandidateTitle')}</DialogTitle>
+            <DialogDescription>
+              {t('createCandidateProfile')}
+            </DialogDescription>
+          </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {/* Basic Information */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
@@ -564,8 +577,17 @@ export default function AddCandidateModal({ open, onOpenChange }: AddCandidateMo
               </Button>
             </DialogFooter>
           </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      {tempCandidateId && (
+        <PhotoUploadModal
+          isOpen={isPhotoUploadOpen}
+          onClose={() => setIsPhotoUploadOpen(false)}
+          onPhotoUploaded={handlePhotoUploaded}
+          candidateId={tempCandidateId}
+        />
+      )}
+    </>
   );
 }

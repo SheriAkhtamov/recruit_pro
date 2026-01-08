@@ -79,7 +79,6 @@ export default function EditCandidateModal({ open, onOpenChange, candidate }: Ed
 
   // Create schema with translations
   const editCandidateSchema = createEditCandidateSchema(t);
-  type EditCandidateForm = z.infer<typeof editCandidateSchema>;
 
   const form = useForm<EditCandidateForm>({
     resolver: zodResolver(editCandidateSchema),

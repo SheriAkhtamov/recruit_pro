@@ -29,6 +29,10 @@ export async function setupVite(app: Express, server: Server) {
     allowedHosts: true as const,
   };
 
+  server.on('error', (err) => {
+    viteLogger.error(`Vite server error: ${err.message}`);
+  });
+
   const vite = await createViteServer({
     ...viteConfig,
     configFile: false,

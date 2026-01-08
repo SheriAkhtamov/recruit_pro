@@ -125,6 +125,9 @@ export default function Sidebar() {
           <div className="ml-3">
             <p className="text-sm font-medium text-slate-900">{user.fullName}</p>
             <p className="text-xs text-slate-500">{formatUserRole(user.role)}</p>
+            {canAccessReports(user) && (
+              <p className="text-[10px] text-emerald-600">{t('reportsAccess')}</p>
+            )}
           </div>
         </div>
       </div>

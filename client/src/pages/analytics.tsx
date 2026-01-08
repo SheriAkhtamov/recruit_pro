@@ -406,6 +406,11 @@ export default function Analytics() {
     value: stage.count || 0,
     fill: COLORS[index % COLORS.length]
   }));
+  const funnelChartData = funnelData.map((stage: { name: string; value: number; fill: string }) => ({
+    name: stage.name,
+    value: stage.value,
+    fill: stage.fill,
+  }));
 
   const conversionRates = funnelData.map((item: { name: string; value: number; fill: string }, index: number) => {
     const totalApplications = funnelData[0].value;
@@ -533,10 +538,15 @@ export default function Analytics() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {conversionRates.map((stage: { name: string; value: number; rate: number; fill: string }, index: number) => (
+              {conversionRates.map((stage: { name: string; value: number; rate: number; fill: string }, index: number) => {
+                const stageNumber = index + 1;
+                return (
                 <div key={stage.name} className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-slate-700">{stage.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-400">#{stageNumber}</span>
+                      <span className="text-sm font-medium text-slate-700">{stage.name}</span>
+                    </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-slate-600">{stage.value}</span>
                       <Badge variant="secondary" className="text-xs">
@@ -546,8 +556,24 @@ export default function Analytics() {
                   </div>
                   <Progress value={stage.rate} className="h-2" />
                 </div>
-              ))}
+                );
+              })}
             </div>
+            {funnelChartData.length > 0 && (
+              <div className="mt-6 h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <FunnelChart>
+                    <Funnel
+                      dataKey="value"
+                      data={funnelChartData}
+                      isAnimationActive={false}
+                    >
+                      <LabelList position="right" fill="#64748b" stroke="none" dataKey="name" />
+                    </Funnel>
+                  </FunnelChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -660,7 +686,11 @@ export default function Analytics() {
                     dataKey="count"
                   >
                     {departmentData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.fill || COLORS[index % COLORS.length]}
+                        name={entry.department || entry.name || `${t('department')} ${index + 1}`}
+                      />
                     ))}
                   </Pie>
                   <Tooltip />
@@ -734,6 +764,12 @@ export default function Analytics() {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {hiredDismissedLoading && (
+              <p className="text-sm text-slate-500 mb-4">{t('loading')}</p>
+            )}
+            {hiredDismissedError && (
+              <p className="text-sm text-red-600 mb-4">{t('failedToLoadData')}</p>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="text-center">
                 <div className="text-3xl font-bold text-emerald-600 mb-2">
@@ -770,7 +806,15 @@ export default function Analytics() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {hiredDismissedByMonth.length > 0 ? (
+            {hiredDismissedMonthLoading ? (
+              <div className="flex items-center justify-center h-64 text-slate-500">
+                <p>{t('loading')}</p>
+              </div>
+            ) : hiredDismissedMonthError ? (
+              <div className="flex items-center justify-center h-64 text-red-500">
+                <p>{t('failedToLoadData')}</p>
+              </div>
+            ) : hiredDismissedByMonth.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={hiredDismissedByMonth}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -811,7 +855,15 @@ export default function Analytics() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {hiredDismissedByYear.length > 0 ? (
+            {hiredDismissedYearLoading ? (
+              <div className="flex items-center justify-center h-64 text-slate-500">
+                <p>{t('loading')}</p>
+              </div>
+            ) : hiredDismissedYearError ? (
+              <div className="flex items-center justify-center h-64 text-red-500">
+                <p>{t('failedToLoadData')}</p>
+              </div>
+            ) : hiredDismissedByYear.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={hiredDismissedByYear}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -887,7 +939,7 @@ export default function Analytics() {
                   <Tooltip
                     formatter={(value, name, props) => [
                       `${value} ${t('rejections')}`,
-                      props.payload.stageName
+                      props.payload.stageName || name
                     ]}
                     labelFormatter={(label) => `${t('stage')} ${label}`}
                   />

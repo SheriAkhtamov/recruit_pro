@@ -160,6 +160,15 @@ export default function CandidateDetailsModal({ open, onOpenChange, candidate }:
           </DialogDescription>
         </DialogHeader>
 
+        {currentStage && (
+          <div className="flex items-center gap-2 text-sm text-slate-600 mt-2">
+            <ArrowRight className="h-4 w-4 text-slate-400" />
+            <span>
+              {t('currentStage')}: {currentStage.stageName}
+            </span>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
           {/* Contact Information */}
           <Card>

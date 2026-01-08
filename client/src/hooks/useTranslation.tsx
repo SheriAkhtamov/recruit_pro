@@ -13,7 +13,10 @@ export function useTranslation() {
   }, []);
 
   const t = (key: string): string => {
-    return i18n.t(key as any);
+    if (!(key in translations)) {
+      return key;
+    }
+    return i18n.t(key as keyof typeof translations);
   };
 
   const setLanguage = (lang: Language): void => {

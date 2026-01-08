@@ -6,6 +6,10 @@ import { requireAuth, requireAdmin, requireWorkspaceAccess } from "../../middlew
 
 const router = Router();
 
+const updateWorkspaceSchema = insertWorkspaceSchema.partial().extend({
+  logoUrl: z.string().url().optional().nullable(),
+});
+
 // Get current workspace info
 router.get("/current", requireAuth, async (req, res, next) => {
   try {
@@ -21,14 +25,27 @@ router.get("/current", requireAuth, async (req, res, next) => {
   }
 });
 
+// Verify workspace access (used by super admin tooling)
+router.get("/verify/:workspaceId", requireWorkspaceAccess("workspaceId"), async (req, res) => {
+  const workspace = await storage.getWorkspace(req.workspaceId!);
+  if (!workspace) {
+    return res.status(404).json({ error: "Workspace not found" });
+  }
+  res.json({ ok: true, workspaceId: workspace.id });
+});
+
 // Update current workspace
 router.put("/current", requireAuth, requireAdmin, async (req, res, next) => {
   try {
     const { name, logoUrl } = req.body;
+    const validation = updateWorkspaceSchema.safeParse({ name, logoUrl });
+    if (!validation.success) {
+      return res.status(400).json({ error: validation.error.message });
+    }
 
     const updatedWorkspace = await storage.updateWorkspace(req.workspaceId!, {
-      name,
-      logoUrl,
+      name: validation.data.name,
+      logoUrl: validation.data.logoUrl ?? undefined,
     });
 
     res.json(updatedWorkspace);

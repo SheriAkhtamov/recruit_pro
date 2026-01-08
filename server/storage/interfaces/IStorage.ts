@@ -86,7 +86,7 @@ export interface IStorage {
   // System Settings
   getSystemSettings(): Promise<SystemSetting[]>;
   getSystemSetting(key: string): Promise<SystemSetting | undefined>;
-  updateSystemSetting(key: string, value: string): Promise<SystemSetting>;
+  updateSystemSetting(setting: InsertSystemSetting): Promise<SystemSetting>;
 
   // Departments
   getDepartments(workspaceId?: number): Promise<Department[]>;

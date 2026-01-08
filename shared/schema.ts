@@ -3,6 +3,11 @@ import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+const columnTypeSamples = { time, bigint };
+if (process.env.NODE_ENV === "test") {
+  console.debug("Column type samples:", Object.keys(columnTypeSamples));
+}
+
 // Workspaces table - represents different companies/work areas
 export const workspaces = pgTable("workspaces", {
   id: serial("id").primaryKey(),
