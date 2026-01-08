@@ -63,10 +63,12 @@ export default function ScheduleInterviewModal({
 
   const scheduleInterviewMutation = useMutation({
     mutationFn: async (data: any) => {
+      const stageIdValue = data?.stageId ?? selectedStage;
+      const interviewerIdValue = data?.interviewerId ?? selectedInterviewer;
       const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`);
       return apiRequest('POST', '/api/interviews/schedule', {
-        stageId: parseInt(selectedStage),
-        interviewerId: parseInt(selectedInterviewer),
+        stageId: parseInt(stageIdValue),
+        interviewerId: parseInt(interviewerIdValue),
         scheduledAt: scheduledAt.toISOString(),
         duration: parseInt(duration),
         notes,
@@ -206,7 +208,10 @@ export default function ScheduleInterviewModal({
               />
             </div>
             <div>
-              <Label htmlFor="time">{t('time')} *</Label>
+              <Label htmlFor="time" className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-slate-500" />
+                {t('time')} *
+              </Label>
               <Input
                 id="time"
                 type="time"

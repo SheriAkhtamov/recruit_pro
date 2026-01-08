@@ -127,7 +127,7 @@ export default function Vacancies() {
     onError: (error: any) => {
       toast({
         title: t('error'),
-        description: t('failedToCreateVacancy'),
+        description: error.message || t('failedToCreateVacancy'),
         variant: 'destructive',
       });
     },

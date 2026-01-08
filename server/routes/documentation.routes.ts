@@ -185,6 +185,8 @@ router.put('/candidates/:id/complete', requireAuth, async (req, res) => {
         const id = parseInt(req.params.id);
         const { salary, startDate, position } = req.body;
 
+        logger.info('Completing documentation', { id, salary, startDate, position, workspaceId: req.workspaceId });
+
         const candidate = await storage.getCandidate(id, req.workspaceId);
         if (!candidate) {
             return res.status(404).json({ error: 'Candidate not found' });

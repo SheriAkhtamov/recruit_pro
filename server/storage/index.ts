@@ -72,8 +72,12 @@ export const storage = {
     getMessagesBetweenUsers: messageStorage.getMessagesBetweenUsers.bind(messageStorage),
     createMessage: messageStorage.createMessage.bind(messageStorage),
     updateMessage: messageStorage.updateMessage.bind(messageStorage),
-    markMessageAsRead: async (id: number, userId: number) =>
-        messageStorage.updateMessage(id, { isRead: true }),
+    markMessageAsRead: async (id: number, userId: number) => {
+        if (!userId) {
+            throw new Error('userId is required to mark message as read');
+        }
+        return messageStorage.updateMessage(id, { isRead: true });
+    },
 
     // Candidate operations (legacy - still in storage.ts)
     getCandidates: legacyStorageInstance.getCandidates.bind(legacyStorageInstance),

@@ -76,7 +76,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // Custom format that logs API requests
 morgan.token('response-time-ms', (req, res) => {
   const responseTime = res.getHeader('X-Response-Time');
-  return typeof responseTime === 'string' ? responseTime : '-';
+  return typeof responseTime === 'string' ? responseTime : (req.method ? '-' : '-');
 });
 
 app.use(morgan(':method :url :status :response-time ms', {

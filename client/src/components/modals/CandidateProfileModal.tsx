@@ -38,6 +38,7 @@ export default function CandidateProfileModal({
 }: CandidateProfileModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const initials = getInitials(candidate.fullName || '');
 
   const updateStageMutation = useMutation({
     mutationFn: async ({ stageId, status, comments }: { 
@@ -116,7 +117,9 @@ export default function CandidateProfileModal({
               size="md"
             />
             <div>
-              <DialogTitle className="text-xl">{candidate.fullName}</DialogTitle>
+              <DialogTitle className="text-xl" title={initials}>
+                {candidate.fullName}
+              </DialogTitle>
               <p className="text-sm text-gray-500">
                 {candidate.vacancy?.title} Candidate
               </p>

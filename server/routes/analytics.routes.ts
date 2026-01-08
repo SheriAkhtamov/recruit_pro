@@ -6,6 +6,8 @@ import { logger } from '../lib/logger';
 
 const router = Router();
 
+router.use(requireAuth);
+
 // Get dashboard statistics
 router.get('/dashboard', requireAnalyticsAccess, async (req, res) => {
     try {

@@ -26,7 +26,7 @@ export class UserStorage {
     }
 
     async getUserByLoginOrEmail(loginOrEmail: string, workspaceId?: number): Promise<User | undefined> {
-        const loginCondition = or(eq(users.email, loginOrEmail), eq(users.username, loginOrEmail));
+        const loginCondition = or(eq(users.email, loginOrEmail), eq(users.fullName, loginOrEmail));
         const conditions = workspaceId
             ? and(loginCondition, eq(users.workspaceId, workspaceId))
             : loginCondition;

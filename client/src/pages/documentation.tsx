@@ -343,6 +343,9 @@ export default function Documentation() {
 
     try {
       const result = await addCandidateMutation.mutateAsync(formData);
+      if (result?.id) {
+        setShowDocumentsModal(true);
+      }
 
       // Reset photo state
       setSelectedPhotoFile(null);
@@ -376,6 +379,11 @@ export default function Documentation() {
     return <div className="p-6">{t('loading')}</div>;
   }
 
+  const documentationDateLabel = new Date().toLocaleDateString(language === 'en' ? 'en-US' : 'ru-RU');
+  const uniqueOwners = new Set(
+    candidates.map((candidate: Candidate) => candidate.createdByUser?.id).filter(Boolean)
+  ).size;
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -384,20 +392,39 @@ export default function Documentation() {
           <p className="text-muted-foreground">
             {t('documentationManagement')}
           </p>
+          <div className="mt-3 flex flex-wrap gap-3 text-sm text-slate-600">
+            <span className="flex items-center gap-2">
+              <UserCircle className="h-4 w-4 text-slate-400" />
+              {t('candidates')}: {candidates.length}
+            </span>
+            <span className="flex items-center gap-2">
+              <Briefcase className="h-4 w-4 text-slate-400" />
+              {t('vacancies')}: {vacancies.length}
+            </span>
+            <span className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-slate-400" />
+              {t('responsible')}: {uniqueOwners}
+            </span>
+            <span className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-slate-400" />
+              {documentationDateLabel}
+            </span>
+          </div>
         </div>
 
-        <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              {t('addManualCandidate')}
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>{t('addManualCandidate')}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleAddCandidate} className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                {t('addManualCandidate')}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>{t('addManualCandidate')}</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleAddCandidate} className="space-y-4">
               {/* Photo Section */}
               <div className="space-y-3">
                 <label className="block text-sm font-medium">{t('candidatePhoto')}</label>
@@ -506,9 +533,44 @@ export default function Documentation() {
                   {addCandidateMutation.isPending ? t('saving') : t('addCandidate')}
                 </Button>
               </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={showDocumentsModal} onOpenChange={setShowDocumentsModal}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <FileText className="h-4 w-4 mr-2" />
+                {t('viewDocuments')}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>{t('documentation')}</DialogTitle>
+                <DialogDescription>{t('documentationManagement')}</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3 text-sm text-slate-600">
+                <p className="flex items-center gap-2">
+                  <UserCircle className="h-4 w-4 text-slate-400" />
+                  {t('addManualCandidate')}
+                </p>
+                <p className="flex items-center gap-2">
+                  <Upload className="h-4 w-4 text-slate-400" />
+                  {t('attachDocuments')}
+                </p>
+                <p className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-slate-400" />
+                  {t('scheduleInterview')}
+                </p>
+              </div>
+              <DialogFooter>
+                <Button onClick={() => setShowDocumentsModal(false)}>
+                  {t('close')}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {candidates.length === 0 ? (

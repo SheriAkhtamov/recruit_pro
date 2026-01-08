@@ -264,6 +264,14 @@ export async function initializeDatabase(): Promise<void> {
   }
 
   try {
+    const migrationsPath = path.join(process.cwd(), 'migrations');
+    if (!fs.existsSync(migrationsPath)) {
+      logger.warn(`⚠️ Migrations folder not found at ${migrationsPath}`);
+    }
+    if (!db) {
+      logger.warn('⚠️ Drizzle db instance not initialized yet.');
+    }
+
     // First, add missing columns to existing tables
     await updateExistingTables();
 
@@ -278,6 +286,7 @@ export async function initializeDatabase(): Promise<void> {
 
     // Test the connection
     const result = await pool.query('SELECT COUNT(*) as table_count FROM information_schema.tables WHERE table_schema = $1', ['public']);
+    logger.info(`✅ Database initialized with ${result.rows[0]?.table_count || 0} tables`);
   } catch (error: any) {
     logger.error("❌ Database initialization failed:");
     logger.error("Error details:", error.message);

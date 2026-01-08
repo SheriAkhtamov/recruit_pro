@@ -49,13 +49,13 @@ export class UsersRepository {
         .select()
         .from(users)
         .where(eq(users.workspaceId, workspaceId))
-        .orderBy(asc(users.fullName));
+        .orderBy(asc(users.fullName), desc(users.createdAt));
     }
     
     return await db
       .select()
       .from(users)
-      .orderBy(asc(users.fullName));
+      .orderBy(asc(users.fullName), desc(users.createdAt));
   }
 
   async getUserWithPassword(id: number, workspaceId?: number): Promise<User | undefined> {
@@ -151,6 +151,6 @@ export class UsersRepository {
       .select()
       .from(users)
       .where(and(...conditions))
-      .orderBy(asc(users.fullName));
+      .orderBy(asc(users.fullName), desc(users.createdAt));
   }
 }

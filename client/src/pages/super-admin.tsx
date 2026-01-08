@@ -269,6 +269,7 @@ export default function SuperAdmin() {
 
   const handleLogout = async () => {
     try {
+      await apiRequest('POST', '/api/auth/super-admin/logout');
       await logout();
       window.location.href = '/login';
     } catch (error) {
@@ -301,6 +302,12 @@ export default function SuperAdmin() {
           <p className="text-slate-600 mt-1">{t('manageWorkspaces')}</p>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => changeLanguage(language === 'en' ? 'ru' : 'en')}
+          >
+            {language === 'en' ? 'RU' : 'EN'}
+          </Button>
           <Button variant="outline" onClick={handleLogout}>
             <LogOut className="h-4 w-4 mr-2" />
             {t('logout')}
@@ -344,6 +351,12 @@ export default function SuperAdmin() {
             <Building2 className="h-12 w-12 text-slate-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">{t('noWorkspaces')}</h3>
             <p className="text-slate-600 mb-4">{t('createFirstWorkspace')}</p>
+            <Alert className="mb-4 border-amber-200 bg-amber-50 text-left">
+              <AlertCircle className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800">
+                {t('createFirstWorkspace')}
+              </AlertDescription>
+            </Alert>
             <Button onClick={() => setShowCreateDialog(true)}>
               <Plus className="h-4 w-4 mr-2" />
               {t('createWorkspace')}
@@ -543,13 +556,24 @@ export default function SuperAdmin() {
             </div>
             <div>
               <Label htmlFor="edit-password">{t('newPassword')}</Label>
-              <Input
-                id="edit-password"
-                type="password"
-                value={editPassword}
-                onChange={(e) => setEditPassword(e.target.value)}
-                placeholder={t('leaveEmptyToKeep')}
-              />
+              <div className="relative">
+                <Input
+                  id="edit-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={editPassword}
+                  onChange={(e) => setEditPassword(e.target.value)}
+                  placeholder={t('leaveEmptyToKeep')}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500"
+                  aria-label={showPassword ? t('hide') : t('password')}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
               <p className="text-xs text-slate-500 mt-1">
                 {t('passwordHint')}
               </p>

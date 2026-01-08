@@ -50,7 +50,7 @@ export class EmailService {
       const subject = `New Interview Assigned - ${candidateName}`;
       const html = `
         <h2>New Interview Assignment</h2>
-        <p>You have been assigned a new interview:</p>
+        <p>Hello ${interviewerName}, you have been assigned a new interview:</p>
         <ul>
           <li><strong>Candidate:</strong> ${candidateName}</li>
           <li><strong>Date & Time:</strong> ${interviewDate.toLocaleString()}</li>
@@ -127,6 +127,10 @@ export class EmailService {
           }
 
           return false;
+        }
+
+        if (data?.id) {
+          logger.info('Email sent', { id: data.id, to, fullName });
         }
 
         return true;

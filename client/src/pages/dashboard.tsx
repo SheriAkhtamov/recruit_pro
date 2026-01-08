@@ -253,13 +253,14 @@ export default function Dashboard() {
             ) : (
               recentCandidates.map((candidate: any) => {
                 const progress = getStageProgress(candidate);
+                const initials = getInitials(candidate.fullName);
                 return (
                   <div
                     key={candidate.id}
                     className="flex items-center justify-between py-3 border-b border-slate-100 last:border-b-0 cursor-pointer hover:bg-slate-50 rounded-lg px-2"
                     onClick={() => setSelectedCandidate(candidate)}
                   >
-                    <div className="flex items-center">
+                    <div className="flex items-center" title={initials}>
                       <CandidatePhoto 
                         photoUrl={candidate.photoUrl} 
                         name={candidate.fullName} 

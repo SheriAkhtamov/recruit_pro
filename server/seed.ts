@@ -13,6 +13,10 @@ export async function seedDatabase() {
   }
 
   try {
+    if (!db) {
+      logger.warn("Drizzle db instance not initialized for seed.");
+    }
+    logger.info(`Seeding schema tables: ${Object.keys(schema).length}`);
 
     // Hash passwords
     const hashedPassword = await bcrypt.hash('admin123', 10);

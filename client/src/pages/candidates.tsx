@@ -125,6 +125,9 @@ export default function Candidates() {
     return matchesSearch && matchesStatus && matchesVacancy && matchesSource;
   });
 
+  const previewCandidate = filteredCandidates[0] as Candidate | undefined;
+  const previewProgress = previewCandidate ? getStageProgress(previewCandidate) : null;
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
@@ -165,13 +168,21 @@ export default function Candidates() {
             {t('manageCandidateProfiles')}
           </p>
         </div>
-        <Button
-          onClick={() => setShowAddCandidate(true)}
-          className="bg-primary-600 hover:bg-primary-700"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          {t('addCandidate')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Link href="/archive">
+            <Button variant="outline">
+              <FileText className="h-4 w-4 mr-2" />
+              {t('archive')}
+            </Button>
+          </Link>
+          <Button
+            onClick={() => setShowAddCandidate(true)}
+            className="bg-primary-600 hover:bg-primary-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {t('addCandidate')}
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -203,7 +214,7 @@ export default function Candidates() {
               </Select>
             </div>
 
-            <Select value={vacancyFilter} onValueChange={setVacancyFilter}>
+            <Select value={vacancyFilter} onValueChange={setVacancyFilter} disabled={vacanciesLoading}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder={t('position')} />
               </SelectTrigger>
@@ -229,6 +240,76 @@ export default function Candidates() {
           </div>
         </CardContent>
       </Card>
+
+      {previewCandidate && (
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-sm font-semibold text-slate-700">
+                  {getInitials(previewCandidate.fullName || '')}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-slate-900">{previewCandidate.fullName}</h3>
+                    <Badge className={getStatusColor(previewCandidate.status || 'active')}>
+                      {getStatusLabel(previewCandidate.status || 'active')}
+                    </Badge>
+                  </div>
+                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-600">
+                    {previewCandidate.email && (
+                      <span className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-slate-400" />
+                        {previewCandidate.email}
+                      </span>
+                    )}
+                    {previewCandidate.phone && (
+                      <span className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-slate-400" />
+                        {previewCandidate.phone}
+                      </span>
+                    )}
+                    {previewCandidate.city && (
+                      <span className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-slate-400" />
+                        {previewCandidate.city}
+                      </span>
+                    )}
+                    {previewProgress && (
+                      <span className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-slate-400" />
+                        {previewProgress.current}/{previewProgress.total} {t('stages')}
+                      </span>
+                    )}
+                    {previewCandidate.resumeUrl && (
+                      <span className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-slate-400" />
+                        {t('resumeAttached')}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setSelectedCandidate(previewCandidate)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleDeleteCandidate(previewCandidate)}
+                >
+                  <Trash2 className="h-4 w-4 text-red-600" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Candidates List */}
       {candidatesLoading ? (

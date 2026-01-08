@@ -122,7 +122,7 @@ export interface IStorage {
     documentationCandidates: number;
   }>;
   getConversionFunnel(workspaceId: number): Promise<{
-    stages: { stageName: string; stageIndex: number; count: number }[];
+    stages: StageCountData[];
     applications: number;
     hired: number;
   }>;
@@ -143,7 +143,7 @@ export interface IStorage {
     documentationCandidates: number;
   }>;
   getConversionFunnelByMonth(workspaceId: number, month: string, year: string): Promise<{
-    stages: { stageName: string; stageIndex: number; count: number }[];
+    stages: StageCountData[];
     applications: number;
     hired: number;
   }>;
@@ -283,7 +283,7 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByLoginOrEmail(loginOrEmail: string, workspaceId?: number): Promise<User | undefined> {
     this.ensureDb();
-    const loginCondition = or(eq(users.email, loginOrEmail), eq(users.username, loginOrEmail));
+    const loginCondition = or(eq(users.email, loginOrEmail), eq(users.fullName, loginOrEmail));
 
     if (workspaceId) {
       const [user] = await db.select().from(users).where(
@@ -1424,8 +1424,7 @@ export class DatabaseStorage implements IStorage {
         .innerJoin(candidates, eq(interviews.candidateId, candidates.id))
         .where(
           and(
-            gte(interviews.scheduledAt, start),
-            lte(interviews.scheduledAt, end),
+            ...conditions,
             eq(candidates.workspaceId, workspaceId)
           )
         )
@@ -1435,12 +1434,7 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(interviews)
-      .where(
-        and(
-          gte(interviews.scheduledAt, start),
-          lte(interviews.scheduledAt, end)
-        )
-      )
+      .where(and(...conditions))
       .orderBy(asc(interviews.scheduledAt));
   }
 

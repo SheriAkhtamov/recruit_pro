@@ -10,6 +10,8 @@ const router = Router();
 // Get all workspaces
 router.get('/workspaces', requireSuperAdmin, async (req, res) => {
     try {
+        const superAdmin = superAuthService.sanitizeSuperAdmin(req.superAdmin!);
+        logger.info('Super admin fetched workspaces', { superAdminId: superAdmin.id });
         const workspaces = await storage.getWorkspaces();
         res.json(workspaces);
     } catch (error) {

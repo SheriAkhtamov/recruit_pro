@@ -239,6 +239,8 @@ router.put('/:id/hire', requireAuth, async (req, res) => {
         const candidateId = parseInt(req.params.id);
         const { salary, startDate, position } = req.body;
 
+        logger.info('Hiring candidate', { candidateId, salary, startDate, position, workspaceId: req.workspaceId });
+
         const candidate = await storage.getCandidate(candidateId, req.workspaceId);
         if (!candidate) {
             return res.status(404).json({ error: 'Candidate not found' });

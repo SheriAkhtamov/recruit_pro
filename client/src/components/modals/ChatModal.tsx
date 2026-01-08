@@ -117,6 +117,11 @@ export default function ChatModal({ open, onOpenChange }: ChatModalProps) {
       apiRequest('POST', '/api/messages', messageData),
     onSuccess: (newMessage) => {
       setNewMessage('');
+      if (newMessage?.id) {
+        queryClient.setQueryData(['/api/messages', selectedEmployeeId], (prev: any) =>
+          prev ? [...prev, newMessage] : [newMessage]
+        );
+      }
       
       // Force refresh of messages
       queryClient.invalidateQueries({ queryKey: ['/api/messages', selectedEmployeeId] });

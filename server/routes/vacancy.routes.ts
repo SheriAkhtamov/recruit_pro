@@ -41,8 +41,12 @@ router.get('/:id', requireAuth, async (req, res) => {
 });
 
 // Create vacancy
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, requireAdmin, async (req, res) => {
     try {
+        const validation = insertVacancySchemaForAPI.safeParse(req.body);
+        if (!validation.success) {
+            return res.status(400).json({ error: validation.error.message });
+        }
         // Note: Not using insertVacancySchemaForAPI.parse() because it strips workspaceId
         const vacancyData = {
             title: req.body.title,
@@ -84,7 +88,7 @@ router.post('/', requireAuth, async (req, res) => {
 });
 
 // Update vacancy
-router.put('/:id', requireAuth, async (req, res) => {
+router.put('/:id', requireAuth, requireAdmin, async (req, res) => {
     try {
         const id = parseInt(req.params.id);
         const updates = req.body;
@@ -113,7 +117,7 @@ router.put('/:id', requireAuth, async (req, res) => {
 });
 
 // Delete vacancy
-router.delete('/:id', requireAuth, async (req, res) => {
+router.delete('/:id', requireAuth, requireAdmin, async (req, res) => {
     try {
         const id = parseInt(req.params.id);
 
