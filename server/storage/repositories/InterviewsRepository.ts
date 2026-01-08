@@ -118,7 +118,7 @@ export class InterviewsRepository {
                             userId: nextStage[0].interviewerId,
                             type: 'interview_assigned',
                             title: t('newInterview'),
-                            message: t('candidatePassedStage', 'ru', { stageName: nextStage[0].stageName }),
+                            message: t('candidatePassedStage', { stageName: nextStage[0].stageName }),
                             relatedEntityType: 'interview_stage',
                             relatedEntityId: nextStage[0].id,
                             isRead: false,
@@ -139,7 +139,7 @@ export class InterviewsRepository {
                 .set({
                     status: 'rejected',
                     rejectionStage: updatedStage.stageIndex,
-                    rejectionReason: stage.comments || 'Failed interview stage',
+                    rejectionReason: stage.comments || t('failedInterviewStage'),
                     updatedAt: new Date(),
                 })
                 .where(eq(candidates.id, updatedStage.candidateId));
@@ -305,9 +305,9 @@ export class InterviewsRepository {
                 userId: interviewerId,
                 type: 'interview_scheduled',
                 title: t('newInterview'),
-                message: t('interviewScheduledOn', 'ru', {
+                message: t('interviewScheduledOn', {
                     stageName: stage[0].stageName,
-                    date: scheduledAt.toLocaleString('ru-RU'),
+                    date: scheduledAt.toLocaleString(),
                 }),
                 relatedEntityType: 'interview',
                 relatedEntityId: interview.id,

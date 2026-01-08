@@ -23,7 +23,7 @@ router.get('/', requireAuth, async (req, res) => {
         let candidates;
 
         // Admin and HR managers can see all candidates
-        if (userRole === 'admin' || userRole === 'manager') {
+        if (userRole === 'admin' || userRole === 'hr_manager') {
             candidates = await storage.getCandidates(req.workspaceId);
         } else {
             // Regular employees only see candidates assigned to them for interviews
