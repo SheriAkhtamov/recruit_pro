@@ -63,7 +63,7 @@ export const storage = {
     markAllNotificationsAsRead: notificationStorage.markAllNotificationsAsRead.bind(notificationStorage),
 
     // Audit Log operations (modular)
-    getAuditLogs: auditStorage.getAuditLogs.bind(auditStorage),
+    getAuditLogs: legacyStorageInstance.getAuditLogs.bind(legacyStorageInstance),
     createAuditLog: auditStorage.createAuditLog.bind(auditStorage),
 
     // Message operations (modular)
@@ -95,6 +95,7 @@ export const storage = {
     createInterviewStage: legacyStorageInstance.createInterviewStage.bind(legacyStorageInstance),
     updateInterviewStage: legacyStorageInstance.updateInterviewStage.bind(legacyStorageInstance),
     getInterviewStage: legacyStorageInstance.getInterviewStage.bind(legacyStorageInstance),
+    deleteInterviewStage: legacyStorageInstance.deleteInterviewStage.bind(legacyStorageInstance),
     deleteInterviewStagesByCandidate: legacyStorageInstance.deleteInterviewStagesByCandidate.bind(legacyStorageInstance),
     getAllInterviewStages: legacyStorageInstance.getAllInterviewStages.bind(legacyStorageInstance),
     getInterviews: legacyStorageInstance.getInterviews.bind(legacyStorageInstance),

@@ -15,29 +15,6 @@ export const globalMutationLimiter = rateLimit({
 });
 
 /**
- * Strict rate limiter for sensitive operations (login, password reset)
- * Already applied in auth.routes.ts
- */
-export const strictAuthLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // 5 requests per 15 minutes
-    message: 'Too many authentication attempts, please try again after 15 minutes',
-    standardHeaders: true,
-    legacyHeaders: false,
-});
-
-/**
- * Moderate rate limiter for file uploads
- */
-export const uploadLimiter = rateLimit({
-    windowMs: 60 * 1000, // 1 minute
-    max: 20, // 20 uploads per minute
-    message: 'Too many file uploads, please try again after a minute',
-    standardHeaders: true,
-    legacyHeaders: false,
-});
-
-/**
  * Lenient rate limiter for read operations (GET)
  */
 export const readLimiter = rateLimit({

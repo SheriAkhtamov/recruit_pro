@@ -58,6 +58,7 @@ export interface IStorage {
   // Interview Stages
   getInterviewStagesByCandidate(candidateId: number): Promise<InterviewStage[]>;
   getInterviewStage(id: number): Promise<InterviewStage | undefined>;
+  deleteInterviewStage(id: number, workspaceId?: number): Promise<void>;
   deleteInterviewStagesByCandidate(candidateId: number): Promise<void>;
   getAllInterviewStages(): Promise<InterviewStage[]>;
   createInterviewStage(stage: InsertInterviewStage): Promise<InterviewStage>;
@@ -81,12 +82,12 @@ export interface IStorage {
 
   // Audit Logs
   createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
-  getAuditLogs(workspaceId?: number): Promise<AuditLog[]>;
+  getAuditLogs(workspaceId: number, limit?: number, offset?: number): Promise<{ logs: AuditLog[]; total: number }>;
 
   // System Settings
-  getSystemSettings(): Promise<SystemSetting[]>;
-  getSystemSetting(key: string): Promise<SystemSetting | undefined>;
-  updateSystemSetting(setting: InsertSystemSetting): Promise<SystemSetting>;
+  getSystemSettings(workspaceId: number): Promise<SystemSetting[]>;
+  getSystemSetting(key: string, workspaceId: number): Promise<SystemSetting | undefined>;
+  setSystemSetting(setting: InsertSystemSetting): Promise<SystemSetting>;
 
   // Departments
   getDepartments(workspaceId?: number): Promise<Department[]>;
