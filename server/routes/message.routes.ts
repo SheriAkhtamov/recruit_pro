@@ -32,7 +32,21 @@ router.get('/conversation/:receiverId', requireAuth, async (req, res) => {
         const receiverId = parseInt(req.params.receiverId);
 
         // getMessagesBetweenUsers takes only 2 args per storage interface
-        const messages = await storage.getMessagesBetweenUsers(senderId, receiverId);
+        const messages = await storage.getMessagesBetweenUsers(senderId, receiverId, req.workspaceId);
+        res.json(messages);
+    } catch (error) {
+        logger.error('Failed to fetch messages', { error, userId: req.user?.id, otherUserId: req.params.receiverId });
+        res.status(500).json({ error: 'Failed to fetch messages' });
+    }
+});
+
+// Backward compatible route for conversation messages
+router.get('/:receiverId', requireAuth, async (req, res) => {
+    try {
+        const senderId = req.user!.id;
+        const receiverId = parseInt(req.params.receiverId);
+
+        const messages = await storage.getMessagesBetweenUsers(senderId, receiverId, req.workspaceId);
         res.json(messages);
     } catch (error) {
         logger.error('Failed to fetch messages', { error, userId: req.user?.id, otherUserId: req.params.receiverId });
