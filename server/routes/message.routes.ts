@@ -29,11 +29,7 @@ router.get('/conversations', requireAuth, async (req, res) => {
 router.get('/conversation/:receiverId', requireAuth, async (req, res) => {
     try {
         const senderId = req.user!.id;
-        const receiverId = Number.parseInt(req.params.receiverId, 10);
-
-        if (Number.isNaN(receiverId)) {
-            return res.status(400).json({ error: 'Invalid receiver id' });
-        }
+        const receiverId = parseInt(req.params.receiverId);
 
         // getMessagesBetweenUsers takes only 2 args per storage interface
         const messages = await storage.getMessagesBetweenUsers(senderId, receiverId, req.workspaceId);
@@ -48,11 +44,7 @@ router.get('/conversation/:receiverId', requireAuth, async (req, res) => {
 router.get('/:receiverId', requireAuth, async (req, res) => {
     try {
         const senderId = req.user!.id;
-        const receiverId = Number.parseInt(req.params.receiverId, 10);
-
-        if (Number.isNaN(receiverId)) {
-            return res.status(400).json({ error: 'Invalid receiver id' });
-        }
+        const receiverId = parseInt(req.params.receiverId);
 
         const messages = await storage.getMessagesBetweenUsers(senderId, receiverId, req.workspaceId);
         res.json(messages);
@@ -71,15 +63,9 @@ router.post('/', requireAuth, async (req, res) => {
             return res.status(400).json({ error: 'Receiver and content are required' });
         }
 
-        const parsedReceiverId = Number.parseInt(receiverId, 10);
-
-        if (Number.isNaN(parsedReceiverId)) {
-            return res.status(400).json({ error: 'Invalid receiver id' });
-        }
-
         const message = await storage.createMessage({
             senderId: req.user!.id,
-            receiverId: parsedReceiverId,
+            receiverId: parseInt(receiverId),
             content,
             isRead: false,
         });
@@ -101,12 +87,7 @@ router.post('/', requireAuth, async (req, res) => {
 // Mark message as read
 router.put('/:id/read', requireAuth, async (req, res) => {
     try {
-        const id = Number.parseInt(req.params.id, 10);
-
-        if (Number.isNaN(id)) {
-            return res.status(400).json({ error: 'Invalid message id' });
-        }
-
+        const id = parseInt(req.params.id);
         const message = await storage.markMessageAsRead(id, req.user!.id);
 
         broadcastToClients({
