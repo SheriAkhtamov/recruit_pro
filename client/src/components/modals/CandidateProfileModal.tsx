@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { getInitials } from '@/lib/auth';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   Dialog,
   DialogContent,
@@ -37,6 +38,7 @@ export default function CandidateProfileModal({
   candidate 
 }: CandidateProfileModalProps) {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const initials = getInitials(candidate.fullName || '');
 
@@ -57,14 +59,14 @@ export default function CandidateProfileModal({
       queryClient.invalidateQueries({ queryKey: ['/api/candidates'] });
       queryClient.invalidateQueries({ queryKey: ['/api/analytics/dashboard'] });
       toast({
-        title: 'Stage updated successfully',
-        description: 'The interview stage has been updated.',
+        title: t('stageUpdatedTitle'),
+        description: t('stageUpdatedDescription'),
       });
     },
     onError: () => {
       toast({
-        title: 'Error',
-        description: 'Failed to update stage. Please try again.',
+        title: t('stageUpdateFailedTitle'),
+        description: t('stageUpdateFailedDescription'),
         variant: 'destructive',
       });
     },
@@ -76,7 +78,7 @@ export default function CandidateProfileModal({
     updateStageMutation.mutate({
       stageId,
       status: 'passed',
-      comments: 'Approved by interviewer',
+      comments: t('stageApprovedComment'),
     });
   };
 
@@ -84,7 +86,7 @@ export default function CandidateProfileModal({
     updateStageMutation.mutate({
       stageId,
       status: 'failed',
-      comments: 'Rejected by interviewer',
+      comments: t('stageRejectedComment'),
     });
   };
 
@@ -96,13 +98,13 @@ export default function CandidateProfileModal({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'passed':
-        return <Badge className="bg-emerald-100 text-emerald-800">Passed</Badge>;
+        return <Badge className="bg-emerald-100 text-emerald-800">{t('statusPassed')}</Badge>;
       case 'failed':
-        return <Badge variant="destructive">Failed</Badge>;
+        return <Badge variant="destructive">{t('statusFailed')}</Badge>;
       case 'in_progress':
-        return <Badge className="bg-amber-100 text-amber-800">In Progress</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800">{t('inProgress')}</Badge>;
       default:
-        return <Badge variant="secondary">Pending</Badge>;
+        return <Badge variant="secondary">{t('pending')}</Badge>;
     }
   };
 
@@ -121,7 +123,7 @@ export default function CandidateProfileModal({
                 {candidate.fullName}
               </DialogTitle>
               <p className="text-sm text-gray-500">
-                {candidate.vacancy?.title} Candidate
+                {candidate.vacancy?.title} {t('candidate')}
               </p>
             </div>
           </div>
@@ -133,7 +135,7 @@ export default function CandidateProfileModal({
             {/* Contact Information */}
             <Card>
               <CardContent className="p-4">
-                <h4 className="text-sm font-medium text-gray-900 mb-3">Contact Information</h4>
+                <h4 className="text-sm font-medium text-gray-900 mb-3">{t('contactInformation')}</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center">
                     <Mail className="w-4 h-4 text-gray-400 mr-2" />
@@ -153,7 +155,7 @@ export default function CandidateProfileModal({
                   )}
                   <div className="flex items-center">
                     <Calendar className="w-4 h-4 text-gray-400 mr-2" />
-                    <span>Applied: {new Date(candidate.createdAt).toLocaleDateString()}</span>
+                    <span>{t('appliedOn')}: {new Date(candidate.createdAt).toLocaleDateString()}</span>
                   </div>
                 </div>
               </CardContent>
@@ -163,14 +165,14 @@ export default function CandidateProfileModal({
             {candidate.resumeUrl && (
               <Card>
                 <CardContent className="p-4">
-                  <h4 className="text-sm font-medium text-gray-900 mb-3">Resume</h4>
+                  <h4 className="text-sm font-medium text-gray-900 mb-3">{t('resumeLabel')}</h4>
                   <div className="flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded-lg">
                     <FileText className="h-5 w-5 text-red-500" />
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">
-                        {candidate.resumeFilename || 'resume.pdf'}
+                        {candidate.resumeFilename || t('resumeDefaultName')}
                       </p>
-                      <p className="text-xs text-gray-500">PDF</p>
+                      <p className="text-xs text-gray-500">{t('fileTypePdf')}</p>
                     </div>
                     <Button variant="ghost" size="icon" asChild>
                       <a href={candidate.resumeUrl} download target="_blank" rel="noopener noreferrer">
@@ -186,7 +188,7 @@ export default function CandidateProfileModal({
             {candidate.source && (
               <Card>
                 <CardContent className="p-4">
-                  <h4 className="text-sm font-medium text-gray-900 mb-3">Source</h4>
+                  <h4 className="text-sm font-medium text-gray-900 mb-3">{t('sourceLabel')}</h4>
                   <div className="flex items-center">
                     <span className="text-sm capitalize">{candidate.source}</span>
                   </div>
@@ -199,7 +201,7 @@ export default function CandidateProfileModal({
           <div className="lg:col-span-2 space-y-6">
             {/* Progress Timeline */}
             <div>
-              <h4 className="text-lg font-medium text-gray-900 mb-4">Interview Progress</h4>
+              <h4 className="text-lg font-medium text-gray-900 mb-4">{t('interviewProgress')}</h4>
               
               {timelineStages.length > 0 && (
                 <div className="mb-6">
@@ -212,11 +214,11 @@ export default function CandidateProfileModal({
 
               {/* Interview History */}
               <div className="space-y-4">
-                <h5 className="text-sm font-medium text-gray-900">Interview History</h5>
+                <h5 className="text-sm font-medium text-gray-900">{t('interviewHistory')}</h5>
                 
                 {candidate.stages?.length === 0 && (
                   <div className="text-center py-8 text-gray-500">
-                    No interview stages configured for this candidate.
+                    {t('noInterviewStagesConfigured')}
                   </div>
                 )}
 
@@ -247,7 +249,7 @@ export default function CandidateProfileModal({
                       
                       {stage.interviewer && (
                         <div className="text-sm text-gray-600 mb-2">
-                          <span>Interviewer: </span>
+                          <span>{t('interviewer')}: </span>
                           <span className="font-medium">{stage.interviewer.fullName}</span>
                         </div>
                       )}
@@ -267,7 +269,7 @@ export default function CandidateProfileModal({
                             className="bg-emerald-600 hover:bg-emerald-700"
                           >
                             <Check className="h-3 w-3 mr-1" />
-                            Approve
+                            {t('approve')}
                           </Button>
                           <Button
                             size="sm"
@@ -276,7 +278,7 @@ export default function CandidateProfileModal({
                             disabled={updateStageMutation.isPending}
                           >
                             <X className="h-3 w-3 mr-1" />
-                            Reject
+                            {t('reject')}
                           </Button>
                           <Button
                             size="sm"
@@ -284,7 +286,7 @@ export default function CandidateProfileModal({
                             disabled={updateStageMutation.isPending}
                           >
                             <Clock className="h-3 w-3 mr-1" />
-                            Reschedule
+                            {t('reschedule')}
                           </Button>
                         </div>
                       )}

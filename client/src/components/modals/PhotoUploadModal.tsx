@@ -108,8 +108,8 @@ export function PhotoUploadModal({ isOpen, onClose, onPhotoUploaded, candidateId
       // Validate file type
       if (!file.type.startsWith('image/')) {
         toast({
-          title: 'Invalid file type',
-          description: 'Please select an image file',
+          title: t('invalidFileTypeTitle'),
+          description: t('selectImageFile'),
           variant: 'destructive',
         });
         return;
@@ -118,8 +118,8 @@ export function PhotoUploadModal({ isOpen, onClose, onPhotoUploaded, candidateId
       // Validate file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
         toast({
-          title: 'File too large',
-          description: 'Please select an image smaller than 5MB',
+          title: t('fileTooLargeTitle'),
+          description: t('imageTooLarge'),
           variant: 'destructive',
         });
         return;
@@ -147,8 +147,8 @@ export function PhotoUploadModal({ isOpen, onClose, onPhotoUploaded, candidateId
   const handleUpload = useCallback(async () => {
     if (!imgRef.current || !completedCrop || !selectedFile) {
       toast({
-        title: 'No crop selected',
-        description: 'Please crop the image before uploading',
+        title: t('noCropSelectedTitle'),
+        description: t('noCropSelectedDescription'),
         variant: 'destructive',
       });
       return;
@@ -178,8 +178,8 @@ export function PhotoUploadModal({ isOpen, onClose, onPhotoUploaded, candidateId
       const result = await response.json();
       
       toast({
-        title: 'Photo uploaded successfully',
-        description: 'The candidate photo has been updated',
+        title: t('photoUploadedTitle'),
+        description: t('photoUploadedDescription'),
       });
 
       onPhotoUploaded(result.photoUrl);
@@ -187,8 +187,8 @@ export function PhotoUploadModal({ isOpen, onClose, onPhotoUploaded, candidateId
     } catch (error) {
       console.error('Error uploading photo:', error);
       toast({
-        title: 'Upload failed',
-        description: 'Failed to upload photo. Please try again.',
+        title: t('uploadFailed'),
+        description: t('uploadFailedDescription'),
         variant: 'destructive',
       });
     } finally {
