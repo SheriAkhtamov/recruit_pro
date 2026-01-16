@@ -329,7 +329,7 @@ export default function AddCandidateModal({ open, onOpenChange }: AddCandidateMo
                   <FormItem>
                     <FormLabel>{t('phone')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="+7 123 456 78 90" {...field} />
+                      <Input placeholder={t('phonePlaceholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

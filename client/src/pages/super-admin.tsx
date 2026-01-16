@@ -541,7 +541,7 @@ export default function SuperAdmin() {
                 id="edit-fullname"
                 value={editFullName}
                 onChange={(e) => setEditFullName(e.target.value)}
-                placeholder="Иван Иванов"
+                placeholder={t('fullNamePlaceholder')}
               />
             </div>
             <div>
@@ -551,7 +551,7 @@ export default function SuperAdmin() {
                 type="email"
                 value={editEmail}
                 onChange={(e) => setEditEmail(e.target.value)}
-                placeholder="admin@company.com"
+                placeholder={t('emailPlaceholder')}
               />
             </div>
             <div>

@@ -233,6 +233,7 @@ export const translations = {
   addUser: { en: 'Add User', ru: 'Добавить пользователя' },
   fullName: { en: 'Full Name', ru: 'Полное имя' },
   phone: { en: 'Phone', ru: 'Телефон' },
+  phonePlaceholder: { en: '+1 (555) 123-45-67', ru: '+7 (999) 123-45-67' },
   role: { en: 'Role', ru: 'Роль' },
   searchUsers: { en: 'Search users...', ru: 'Поиск пользователей...' },
   filterByRole: { en: 'Filter by role', ru: 'Фильтр по роли' },
