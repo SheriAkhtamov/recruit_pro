@@ -1,5 +1,44 @@
 import { db } from '../db';
 import { messages, users, type Message, type InsertMessage, type User } from '@shared/schema';
+import { eq, or, and, asc, sql } from 'drizzle-orm';
+
+export class MessageStorage {
+    async getConversations(userId: number, workspaceId?: number): Promise<User[]> {
+        const query = workspaceId ? sql`
+      SELECT DISTINCT
+        ${users.id} as id,
+        ${users.fullName} as "fullName",
+        ${users.position} as position,
+        ${users.email} as email,
+        MAX(${messages.createdAt}) as last_message_time
+      FROM ${messages}
+      INNER JOIN ${users} ON ${users.id} = CASE
+        WHEN ${messages.senderId} = ${userId} THEN ${messages.receiverId}
+        ELSE ${messages.senderId}
+      END
+      WHERE (${messages.senderId} = ${userId} OR ${messages.receiverId} = ${userId})
+        AND ${users.workspaceId} = ${workspaceId}
+      GROUP BY ${users.id}, ${users.fullName}, ${users.position}, ${users.email}
+      ORDER BY last_message_time DESC
+    ` : sql`
+      SELECT DISTINCT
+        ${users.id} as id,
+        ${users.fullName} as "fullName",
+        ${users.position} as position,
+        ${users.email} as email,
+        MAX(${messages.createdAt}) as last_message_time
+      FROM ${messages}
+      INNER JOIN ${users} ON ${users.id} = CASE
+        WHEN ${messages.senderId} = ${userId} THEN ${messages.receiverId}
+        ELSE ${messages.senderId}
+      END
+      WHERE (${messages.senderId} = ${userId} OR ${messages.receiverId} = ${userId})
+      GROUP BY ${users.id}, ${users.fullName}, ${users.position}, ${users.email}
+      ORDER BY last_message_time DESC
+    `;
+
+        const result = await db.execute(query);
+        return (result.rows as any[]).map(({ last_message_time, ...user }) => user) as User[];
 import { eq, or, and, desc, asc, sql } from 'drizzle-orm';
 
 export class MessageStorage {
@@ -53,6 +92,22 @@ export class MessageStorage {
     }
 
     async getMessagesBetweenUsers(senderId: number, receiverId: number, workspaceId?: number): Promise<Message[]> {
+        const conditions = [
+            or(
+                and(eq(messages.senderId, senderId), eq(messages.receiverId, receiverId)),
+                and(eq(messages.senderId, receiverId), eq(messages.receiverId, senderId))
+            ),
+        ];
+
+        if (workspaceId) {
+            conditions.push(eq(users.workspaceId, workspaceId));
+            conditions.push(sql`EXISTS (
+        SELECT 1 FROM ${users} receiver
+        WHERE receiver.id = ${messages.receiverId}
+          AND receiver.workspace_id = ${workspaceId}
+      )`);
+        }
+
         const results = await db
             .select({
                 id: messages.id,
@@ -68,6 +123,7 @@ export class MessageStorage {
             })
             .from(messages)
             .leftJoin(users, eq(messages.senderId, users.id))
+            .where(and(...conditions))
             .where(
                 or(
                     and(eq(messages.senderId, senderId), eq(messages.receiverId, receiverId)),
