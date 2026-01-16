@@ -488,7 +488,7 @@ export default function Admin() {
                               <FormItem>
                                 <FormLabel>{t('phone')}</FormLabel>
                                 <FormControl>
-                                  <Input type="tel" placeholder="+7 (999) 123-45-67" {...field} />
+                                  <Input type="tel" placeholder={t('phonePlaceholder')} {...field} />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>

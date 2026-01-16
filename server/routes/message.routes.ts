@@ -29,10 +29,32 @@ router.get('/conversations', requireAuth, async (req, res) => {
 router.get('/conversation/:receiverId', requireAuth, async (req, res) => {
     try {
         const senderId = req.user!.id;
-        const receiverId = parseInt(req.params.receiverId);
+        const receiverId = Number.parseInt(req.params.receiverId, 10);
+
+        if (Number.isNaN(receiverId)) {
+            return res.status(400).json({ error: 'Invalid receiver id' });
+        }
 
         // getMessagesBetweenUsers takes only 2 args per storage interface
-        const messages = await storage.getMessagesBetweenUsers(senderId, receiverId);
+        const messages = await storage.getMessagesBetweenUsers(senderId, receiverId, req.workspaceId);
+        res.json(messages);
+    } catch (error) {
+        logger.error('Failed to fetch messages', { error, userId: req.user?.id, otherUserId: req.params.receiverId });
+        res.status(500).json({ error: 'Failed to fetch messages' });
+    }
+});
+
+// Backward compatible route for conversation messages
+router.get('/:receiverId', requireAuth, async (req, res) => {
+    try {
+        const senderId = req.user!.id;
+        const receiverId = Number.parseInt(req.params.receiverId, 10);
+
+        if (Number.isNaN(receiverId)) {
+            return res.status(400).json({ error: 'Invalid receiver id' });
+        }
+
+        const messages = await storage.getMessagesBetweenUsers(senderId, receiverId, req.workspaceId);
         res.json(messages);
     } catch (error) {
         logger.error('Failed to fetch messages', { error, userId: req.user?.id, otherUserId: req.params.receiverId });
@@ -49,9 +71,15 @@ router.post('/', requireAuth, async (req, res) => {
             return res.status(400).json({ error: 'Receiver and content are required' });
         }
 
+        const parsedReceiverId = Number.parseInt(receiverId, 10);
+
+        if (Number.isNaN(parsedReceiverId)) {
+            return res.status(400).json({ error: 'Invalid receiver id' });
+        }
+
         const message = await storage.createMessage({
             senderId: req.user!.id,
-            receiverId: parseInt(receiverId),
+            receiverId: parsedReceiverId,
             content,
             isRead: false,
         });
@@ -60,7 +88,7 @@ router.post('/', requireAuth, async (req, res) => {
         broadcastToClients({
             type: 'NEW_MESSAGE',
             data: message,
-            recipientId: parseInt(receiverId),
+            recipientId: parsedReceiverId,
         });
 
         res.json(message);
@@ -73,7 +101,12 @@ router.post('/', requireAuth, async (req, res) => {
 // Mark message as read
 router.put('/:id/read', requireAuth, async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid message id' });
+        }
+
         const message = await storage.markMessageAsRead(id, req.user!.id);
 
         broadcastToClients({
