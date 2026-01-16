@@ -63,9 +63,14 @@ router.post('/', requireAuth, async (req, res) => {
             return res.status(400).json({ error: 'Receiver and content are required' });
         }
 
+        const parsedReceiverId = parseInt(receiverId, 10);
+        if (Number.isNaN(parsedReceiverId)) {
+            return res.status(400).json({ error: 'Invalid receiver id' });
+        }
+
         const message = await storage.createMessage({
             senderId: req.user!.id,
-            receiverId: parseInt(receiverId),
+            receiverId: parsedReceiverId,
             content,
             isRead: false,
         });

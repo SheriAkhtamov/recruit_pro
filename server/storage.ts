@@ -743,6 +743,24 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async deleteInterviewStage(id: number, workspaceId?: number): Promise<void> {
+    this.ensureDb();
+    try {
+      if (workspaceId) {
+        const existingStage = await this.getInterviewStage(id, workspaceId);
+        if (!existingStage) {
+          throw new Error('Interview stage not found or access denied');
+        }
+      }
+
+      await db.delete(interviews).where(eq(interviews.stageId, id));
+      await db.delete(interviewStages).where(eq(interviewStages.id, id));
+    } catch (error) {
+      logger.error('Error deleting interview stage:', error);
+      throw error;
+    }
+  }
+
   async getInterviewStagesByCandidate(candidateId: number, workspaceId?: number): Promise<any[]> {
     this.ensureDb();
     let query = db

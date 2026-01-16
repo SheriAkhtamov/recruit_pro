@@ -95,6 +95,7 @@ export async function registerModularRoutes(app: Express): Promise<Server> {
     app.use('/api/interviews', interviewRoutes);
     app.use('/api/interview-stages', interviewStageRoutes);
     app.use('/api/departments', departmentRoutes);
+    app.use('/api/workspace/departments', departmentRoutes);
     app.use('/api/documentation', documentationRoutes);
     app.use('/api/analytics', analyticsRoutes);
     app.use('/api/super-admin', superAdminRoutes);

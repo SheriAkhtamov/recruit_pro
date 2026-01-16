@@ -58,6 +58,7 @@ export interface IStorage {
   // Interview Stages
   getInterviewStagesByCandidate(candidateId: number): Promise<InterviewStage[]>;
   getInterviewStage(id: number): Promise<InterviewStage | undefined>;
+  deleteInterviewStage(id: number, workspaceId?: number): Promise<void>;
   deleteInterviewStagesByCandidate(candidateId: number): Promise<void>;
   getAllInterviewStages(): Promise<InterviewStage[]>;
   createInterviewStage(stage: InsertInterviewStage): Promise<InterviewStage>;
