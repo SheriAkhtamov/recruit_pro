@@ -39,6 +39,56 @@ export class MessageStorage {
 
         const result = await db.execute(query);
         return (result.rows as any[]).map(({ last_message_time, ...user }) => user) as User[];
+import { eq, or, and, desc, asc, sql } from 'drizzle-orm';
+
+export class MessageStorage {
+    async getConversations(userId: number, workspaceId?: number): Promise<User[]> {
+        const senderConditions: any[] = [
+            eq(messages.receiverId, userId),
+            sql`${users.id} != ${userId}`,
+        ];
+
+        if (workspaceId) {
+            senderConditions.push(eq(users.workspaceId, workspaceId));
+        }
+
+        const senderUsers = await db
+            .selectDistinct({
+                id: users.id,
+                fullName: users.fullName,
+                position: users.position,
+                email: users.email,
+            })
+            .from(messages)
+            .innerJoin(users, eq(messages.senderId, users.id))
+            .where(and(...senderConditions));
+
+        const receiverConditions: any[] = [
+            eq(messages.senderId, userId),
+            sql`${users.id} != ${userId}`,
+        ];
+
+        if (workspaceId) {
+            receiverConditions.push(eq(users.workspaceId, workspaceId));
+        }
+
+        const receiverUsers = await db
+            .selectDistinct({
+                id: users.id,
+                fullName: users.fullName,
+                position: users.position,
+                email: users.email,
+            })
+            .from(messages)
+            .innerJoin(users, eq(messages.receiverId, users.id))
+            .where(and(...receiverConditions));
+
+        const allUsers = [...senderUsers, ...receiverUsers];
+        const uniqueUsers = allUsers.filter((user, index, self) =>
+            index === self.findIndex(u => u.id === user.id)
+        );
+
+        return uniqueUsers as User[];
     }
 
     async getMessagesBetweenUsers(senderId: number, receiverId: number, workspaceId?: number): Promise<Message[]> {
@@ -74,6 +124,12 @@ export class MessageStorage {
             .from(messages)
             .leftJoin(users, eq(messages.senderId, users.id))
             .where(and(...conditions))
+            .where(
+                or(
+                    and(eq(messages.senderId, senderId), eq(messages.receiverId, receiverId)),
+                    and(eq(messages.senderId, receiverId), eq(messages.receiverId, senderId))
+                )
+            )
             .orderBy(asc(messages.createdAt));
 
         if (workspaceId) {
