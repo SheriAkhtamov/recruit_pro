@@ -76,7 +76,7 @@ export const storage = {
         if (!userId) {
             throw new Error('userId is required to mark message as read');
         }
-        return messageStorage.updateMessage(id, { isRead: true });
+        return messageStorage.markMessageAsRead(id, userId);
     },
 
     // Candidate operations (legacy - still in storage.ts)

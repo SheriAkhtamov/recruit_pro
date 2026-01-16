@@ -109,7 +109,7 @@ export interface IStorage {
   setSystemSetting(setting: InsertSystemSetting): Promise<SystemSetting>;
 
   // Messages
-  getMessagesBetweenUsers(user1Id: number, user2Id: number): Promise<Message[]>;
+  getMessagesBetweenUsers(user1Id: number, user2Id: number, workspaceId?: number): Promise<Message[]>;
   getConversationsByUser(userId: number, workspaceId?: number): Promise<User[]>;
   createMessage(message: InsertMessage): Promise<Message>;
 
@@ -1823,8 +1823,24 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async getMessagesBetweenUsers(user1Id: number, user2Id: number): Promise<Message[]> {
+  async getMessagesBetweenUsers(user1Id: number, user2Id: number, workspaceId?: number): Promise<Message[]> {
     this.ensureDb();
+    const conditions = [
+      or(
+        and(eq(messages.senderId, user1Id), eq(messages.receiverId, user2Id)),
+        and(eq(messages.senderId, user2Id), eq(messages.receiverId, user1Id))
+      )
+    ];
+
+    if (workspaceId) {
+      conditions.push(eq(users.workspaceId, workspaceId));
+      conditions.push(sql`EXISTS (
+        SELECT 1 FROM ${users} receiver
+        WHERE receiver.id = ${messages.receiverId}
+          AND receiver.workspace_id = ${workspaceId}
+      )`);
+    }
+
     const result = await db
       .select({
         id: messages.id,
@@ -1840,12 +1856,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(messages)
       .leftJoin(users, eq(messages.senderId, users.id))
-      .where(
-        or(
-          and(eq(messages.senderId, user1Id), eq(messages.receiverId, user2Id)),
-          and(eq(messages.senderId, user2Id), eq(messages.receiverId, user1Id))
-        )
-      )
+      .where(and(...conditions))
       .orderBy(asc(messages.createdAt));
 
     // Format the result to match Message type

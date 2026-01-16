@@ -40,6 +40,12 @@ router.post('/candidates', requireAuth, documentationUpload.fields([
             return res.status(400).json({ error: 'Vacancy is required' });
         }
 
+        const parsedVacancyId = Number.parseInt(req.body.vacancyId, 10);
+
+        if (Number.isNaN(parsedVacancyId)) {
+            return res.status(400).json({ error: 'Invalid vacancy id' });
+        }
+
         let photoUrl = '';
         const documentUrls: string[] = [];
 
@@ -66,7 +72,7 @@ router.post('/candidates', requireAuth, documentationUpload.fields([
             phone: req.body.phone || null,
             city: req.body.city || null,
             notes: req.body.notes || null,
-            vacancyId: parseInt(req.body.vacancyId),
+            vacancyId: parsedVacancyId,
             status: 'documentation',
             source: 'manual_documentation',
             createdBy: req.user!.id,
@@ -114,7 +120,11 @@ router.put('/candidates/:id', requireAuth, documentationUpload.fields([
     { name: 'documents', maxCount: 10 }
 ]), async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid candidate id' });
+        }
 
         const candidate = await storage.getCandidate(id, req.workspaceId);
         if (!candidate) {
@@ -182,9 +192,12 @@ router.put('/candidates/:id', requireAuth, documentationUpload.fields([
 // Complete documentation and move to hired
 router.put('/candidates/:id/complete', requireAuth, async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
         const { salary, startDate, position } = req.body;
 
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid candidate id' });
+        }
         logger.info('Completing documentation', { id, salary, startDate, position, workspaceId: req.workspaceId });
 
         const candidate = await storage.getCandidate(id, req.workspaceId);

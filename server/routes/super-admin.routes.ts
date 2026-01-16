@@ -54,7 +54,11 @@ router.post('/workspaces', requireSuperAdmin, async (req, res) => {
 // Get single workspace
 router.get('/workspaces/:id', requireSuperAdmin, async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid workspace id' });
+        }
         const workspace = await storage.getWorkspace(id);
 
         if (!workspace) {
@@ -71,8 +75,12 @@ router.get('/workspaces/:id', requireSuperAdmin, async (req, res) => {
 // Update workspace
 router.put('/workspaces/:id', requireSuperAdmin, async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
         const { companyName, isActive } = req.body;
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid workspace id' });
+        }
 
         const updates: any = {};
         if (companyName) updates.companyName = companyName;
@@ -89,7 +97,11 @@ router.put('/workspaces/:id', requireSuperAdmin, async (req, res) => {
 // Delete workspace
 router.delete('/workspaces/:id', requireSuperAdmin, async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid workspace id' });
+        }
         await storage.deleteWorkspace(id);
         res.json({ success: true });
     } catch (error) {
@@ -101,7 +113,11 @@ router.delete('/workspaces/:id', requireSuperAdmin, async (req, res) => {
 // Get workspace admin user
 router.get('/workspaces/:id/admin', requireSuperAdmin, async (req, res) => {
     try {
-        const workspaceId = parseInt(req.params.id);
+        const workspaceId = Number.parseInt(req.params.id, 10);
+
+        if (Number.isNaN(workspaceId)) {
+            return res.status(400).json({ error: 'Invalid workspace id' });
+        }
         const adminUser = await storage.getWorkspaceAdminUser(workspaceId);
 
         if (!adminUser) {
@@ -118,8 +134,12 @@ router.get('/workspaces/:id/admin', requireSuperAdmin, async (req, res) => {
 // Update workspace admin user
 router.put('/workspaces/:id/admin', requireSuperAdmin, async (req, res) => {
     try {
-        const workspaceId = parseInt(req.params.id);
+        const workspaceId = Number.parseInt(req.params.id, 10);
         const { email, fullName, password } = req.body;
+
+        if (Number.isNaN(workspaceId)) {
+            return res.status(400).json({ error: 'Invalid workspace id' });
+        }
 
         const adminUser = await storage.getWorkspaceAdminUser(workspaceId);
         if (!adminUser) {
@@ -144,7 +164,11 @@ router.put('/workspaces/:id/admin', requireSuperAdmin, async (req, res) => {
 // Super admin login as workspace admin (view mode)
 router.post('/login-as-admin/:workspaceId', requireSuperAdmin, async (req, res) => {
     try {
-        const workspaceId = parseInt(req.params.workspaceId);
+        const workspaceId = Number.parseInt(req.params.workspaceId, 10);
+
+        if (Number.isNaN(workspaceId)) {
+            return res.status(400).json({ error: 'Invalid workspace id' });
+        }
 
         // Get admin user for this workspace
         const adminUser = await storage.getWorkspaceAdminUser(workspaceId);

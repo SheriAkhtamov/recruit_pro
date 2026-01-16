@@ -40,8 +40,12 @@ router.get('/', requireAuth, async (req, res) => {
 // Get candidates assigned to specific interviewer
 router.get('/interviewer/:id', requireAuth, async (req, res) => {
     try {
-        const interviewerId = parseInt(req.params.id);
+        const interviewerId = Number.parseInt(req.params.id, 10);
         const userId = req.user!.id;
+
+        if (Number.isNaN(interviewerId)) {
+            return res.status(400).json({ error: 'Invalid interviewer id' });
+        }
 
         // Security check: employees can only see their own assigned candidates
         if (req.user!.role !== 'admin' && interviewerId !== userId) {
@@ -59,7 +63,11 @@ router.get('/interviewer/:id', requireAuth, async (req, res) => {
 // Get single candidate
 router.get('/:id', requireAuth, async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid candidate id' });
+        }
         const candidate = await storage.getCandidate(id, req.workspaceId);
 
         if (!candidate) {
@@ -75,10 +83,16 @@ router.get('/:id', requireAuth, async (req, res) => {
 // Create candidate
 router.post('/', requireAuth, upload.array('files', 5), async (req, res) => {
     try {
+        const parsedVacancyId = req.body.vacancyId ? Number.parseInt(req.body.vacancyId, 10) : null;
+
+        if (req.body.vacancyId && Number.isNaN(parsedVacancyId)) {
+            return res.status(400).json({ error: 'Invalid vacancy id' });
+        }
+
         const candidateData = insertCandidateSchemaForAPI.parse({
             ...req.body,
             workspaceId: req.workspaceId,
-            vacancyId: req.body.vacancyId ? parseInt(req.body.vacancyId) : null,
+            vacancyId: parsedVacancyId,
             createdBy: req.user!.id,
         });
 
@@ -125,7 +139,11 @@ router.post('/', requireAuth, upload.array('files', 5), async (req, res) => {
 // Update candidate
 router.put('/:id', requireAuth, upload.array('files', 5), async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid candidate id' });
+        }
 
         const oldCandidate = await storage.getCandidate(id, req.workspaceId);
         if (!oldCandidate) {
@@ -145,14 +163,25 @@ router.put('/:id', requireAuth, upload.array('files', 5), async (req, res) => {
         // Handle status updates (like rejection)
         if (req.body.status) updates.status = req.body.status;
         if (req.body.rejectionReason) updates.rejectionReason = req.body.rejectionReason;
-        if (req.body.rejectionStage !== undefined) updates.rejectionStage = parseInt(req.body.rejectionStage);
+        if (req.body.rejectionStage !== undefined) {
+            const parsedRejectionStage = Number.parseInt(req.body.rejectionStage, 10);
+
+            if (Number.isNaN(parsedRejectionStage)) {
+                return res.status(400).json({ error: 'Invalid rejection stage' });
+            }
+
+            updates.rejectionStage = parsedRejectionStage;
+        }
 
         // Handle vacancy ID
         if (req.body.vacancyId && req.body.vacancyId !== '') {
-            const parsedVacancyId = parseInt(req.body.vacancyId);
-            if (!isNaN(parsedVacancyId)) {
-                updates.vacancyId = parsedVacancyId;
+            const parsedVacancyId = Number.parseInt(req.body.vacancyId, 10);
+
+            if (Number.isNaN(parsedVacancyId)) {
+                return res.status(400).json({ error: 'Invalid vacancy id' });
             }
+
+            updates.vacancyId = parsedVacancyId;
         }
 
         // Handle file uploads if any
@@ -203,7 +232,11 @@ router.put('/:id', requireAuth, upload.array('files', 5), async (req, res) => {
 // Delete candidate
 router.delete('/:id', requireAuth, async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid candidate id' });
+        }
 
         const candidate = await storage.getCandidate(id, req.workspaceId);
         if (!candidate) {
@@ -236,8 +269,12 @@ router.delete('/:id', requireAuth, async (req, res) => {
 // Hire candidate
 router.put('/:id/hire', requireAuth, async (req, res) => {
     try {
-        const candidateId = parseInt(req.params.id);
+        const candidateId = Number.parseInt(req.params.id, 10);
         const { salary, startDate, position } = req.body;
+
+        if (Number.isNaN(candidateId)) {
+            return res.status(400).json({ error: 'Invalid candidate id' });
+        }
 
         logger.info('Hiring candidate', { candidateId, salary, startDate, position, workspaceId: req.workspaceId });
 
@@ -276,8 +313,12 @@ router.put('/:id/hire', requireAuth, async (req, res) => {
 // Dismiss candidate
 router.put('/:id/dismiss', requireAuth, async (req, res) => {
     try {
-        const candidateId = parseInt(req.params.id);
+        const candidateId = Number.parseInt(req.params.id, 10);
         const { dismissalReason, dismissalDate } = req.body;
+
+        if (Number.isNaN(candidateId)) {
+            return res.status(400).json({ error: 'Invalid candidate id' });
+        }
 
         const candidate = await storage.getCandidate(candidateId, req.workspaceId);
         if (!candidate) {
@@ -318,7 +359,11 @@ router.put('/:id/dismiss', requireAuth, async (req, res) => {
 // Move candidate to documentation after passing all interviews
 router.put('/:id/move-to-documentation', requireAuth, async (req, res) => {
     try {
-        const candidateId = parseInt(req.params.id);
+        const candidateId = Number.parseInt(req.params.id, 10);
+
+        if (Number.isNaN(candidateId)) {
+            return res.status(400).json({ error: 'Invalid candidate id' });
+        }
 
         const candidate = await storage.getCandidate(candidateId, req.workspaceId);
         if (!candidate) {

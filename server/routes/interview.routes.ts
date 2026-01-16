@@ -27,7 +27,11 @@ router.get('/', requireAuth, async (req, res) => {
 // Get single interview
 router.get('/:id', requireAuth, async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid interview id' });
+        }
         const interview = await storage.getInterview(id, req.workspaceId);
 
         if (!interview) {
@@ -49,16 +53,24 @@ router.post('/', requireAuth, async (req, res) => {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
+        const parsedStageId = Number.parseInt(stageId, 10);
+        const parsedInterviewerId = Number.parseInt(interviewerId, 10);
+        const parsedDuration = Number.parseInt(duration, 10) || 60;
+
+        if (Number.isNaN(parsedStageId) || Number.isNaN(parsedInterviewerId)) {
+            return res.status(400).json({ error: 'Invalid stage or interviewer id' });
+        }
+
         const interview = await storage.scheduleInterview(
-            parseInt(stageId),
-            parseInt(interviewerId),
+            parsedStageId,
+            parsedInterviewerId,
             scheduledAt,
-            parseInt(duration) || 60
+            parsedDuration
         );
 
         // Send notification email to interviewer
-        const interviewer = await storage.getUser(parseInt(interviewerId), req.workspaceId);
-        const stage = await storage.getInterviewStage(parseInt(stageId));
+        const interviewer = await storage.getUser(parsedInterviewerId, req.workspaceId);
+        const stage = await storage.getInterviewStage(parsedStageId);
 
         if (interviewer && stage && stage.candidateId) {
             const candidate = await storage.getCandidate(stage.candidateId, req.workspaceId);
@@ -96,7 +108,11 @@ router.post('/', requireAuth, async (req, res) => {
 // Update interview
 router.put('/:id', requireAuth, async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid interview id' });
+        }
         const updates = req.body;
 
         // Check if this is a reschedule operation
@@ -160,8 +176,12 @@ router.put('/:id', requireAuth, async (req, res) => {
 // Reschedule interview (specific endpoint)
 router.put('/:id/reschedule', requireAuth, async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
         const { newDateTime } = req.body;
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid interview id' });
+        }
 
         if (!newDateTime) {
             return res.status(400).json({ error: 'New date/time is required' });
