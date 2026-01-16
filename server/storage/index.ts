@@ -95,6 +95,7 @@ export const storage = {
     createInterviewStage: legacyStorageInstance.createInterviewStage.bind(legacyStorageInstance),
     updateInterviewStage: legacyStorageInstance.updateInterviewStage.bind(legacyStorageInstance),
     getInterviewStage: legacyStorageInstance.getInterviewStage.bind(legacyStorageInstance),
+    deleteInterviewStage: legacyStorageInstance.deleteInterviewStage.bind(legacyStorageInstance),
     deleteInterviewStagesByCandidate: legacyStorageInstance.deleteInterviewStagesByCandidate.bind(legacyStorageInstance),
     getAllInterviewStages: legacyStorageInstance.getAllInterviewStages.bind(legacyStorageInstance),
     getInterviews: legacyStorageInstance.getInterviews.bind(legacyStorageInstance),

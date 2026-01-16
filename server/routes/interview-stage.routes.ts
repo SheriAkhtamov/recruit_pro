@@ -156,15 +156,12 @@ router.delete('/:id', requireAuth, async (req, res) => {
         if (Number.isNaN(id)) {
             return res.status(400).json({ error: 'Invalid interview stage id' });
         }
-        // Using any cast because deleteInterviewStage might be missing from IStorage interface definition 
-        // but present in implementation, or I missed it.
-        if ((storage as any).deleteInterviewStage) {
-            await (storage as any).deleteInterviewStage(id);
-        } else {
-            // Fallback or error if method doesn't exist
-            logger.error('deleteInterviewStage method missing on storage');
-            return res.status(500).json({ error: 'Method not implemented' });
+        const stage = await storage.getInterviewStage(id, req.workspaceId);
+        if (!stage) {
+            return res.status(404).json({ error: 'Interview stage not found' });
         }
+
+        await storage.deleteInterviewStage(id, req.workspaceId);
 
         await storage.createAuditLog({
             userId: req.user!.id,
