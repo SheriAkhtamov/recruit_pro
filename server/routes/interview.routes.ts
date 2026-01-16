@@ -108,7 +108,11 @@ router.post('/', requireAuth, async (req, res) => {
 // Update interview
 router.put('/:id', requireAuth, async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid interview id' });
+        }
         const updates = req.body;
 
         // Check if this is a reschedule operation
@@ -172,8 +176,12 @@ router.put('/:id', requireAuth, async (req, res) => {
 // Reschedule interview (specific endpoint)
 router.put('/:id/reschedule', requireAuth, async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
         const { newDateTime } = req.body;
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid interview id' });
+        }
 
         if (!newDateTime) {
             return res.status(400).json({ error: 'New date/time is required' });

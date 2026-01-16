@@ -27,7 +27,11 @@ router.get('/', requireAuth, async (req, res) => {
 // Get single vacancy
 router.get('/:id', requireAuth, async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid vacancy id' });
+        }
         const vacancy = await storage.getVacancy(id, req.workspaceId);
 
         if (!vacancy) {
@@ -90,8 +94,12 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
 // Update vacancy
 router.put('/:id', requireAuth, requireAdmin, async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
         const updates = req.body;
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid vacancy id' });
+        }
 
         const oldVacancy = await storage.getVacancy(id, req.workspaceId);
         const vacancy = await storage.updateVacancy(id, updates);
@@ -119,7 +127,11 @@ router.put('/:id', requireAuth, requireAdmin, async (req, res) => {
 // Delete vacancy
 router.delete('/:id', requireAuth, requireAdmin, async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid vacancy id' });
+        }
 
         const vacancy = await storage.getVacancy(id, req.workspaceId);
         if (!vacancy) {

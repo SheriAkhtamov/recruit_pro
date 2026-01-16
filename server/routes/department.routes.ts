@@ -57,8 +57,12 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
 // Update department
 router.put('/:id', requireAuth, requireAdmin, async (req, res) => {
     try {
-        const departmentId = parseInt(req.params.id);
+        const departmentId = Number.parseInt(req.params.id, 10);
         const { name, description } = req.body;
+
+        if (Number.isNaN(departmentId)) {
+            return res.status(400).json({ error: 'Invalid department id' });
+        }
 
         const oldDepartment = await storage.getDepartment(departmentId, req.workspaceId);
         if (!oldDepartment) {
@@ -89,7 +93,11 @@ router.put('/:id', requireAuth, requireAdmin, async (req, res) => {
 // Delete department
 router.delete('/:id', requireAuth, requireAdmin, async (req, res) => {
     try {
-        const departmentId = parseInt(req.params.id);
+        const departmentId = Number.parseInt(req.params.id, 10);
+
+        if (Number.isNaN(departmentId)) {
+            return res.status(400).json({ error: 'Invalid department id' });
+        }
 
         const department = await storage.getDepartment(departmentId, req.workspaceId);
         if (!department) {

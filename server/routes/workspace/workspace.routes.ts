@@ -137,8 +137,12 @@ router.post("/departments", requireAuth, requireAdmin, async (req, res, next) =>
 // Update department
 router.put("/departments/:id", requireAuth, requireAdmin, async (req, res, next) => {
   try {
-    const departmentId = parseInt(req.params.id);
+    const departmentId = Number.parseInt(req.params.id, 10);
     const { name, description } = req.body;
+
+    if (Number.isNaN(departmentId)) {
+      return res.status(400).json({ error: "Invalid department id" });
+    }
 
     const updatedDepartment = await storage.updateDepartment(departmentId, {
       name,
@@ -154,7 +158,11 @@ router.put("/departments/:id", requireAuth, requireAdmin, async (req, res, next)
 // Delete department
 router.delete("/departments/:id", requireAuth, requireAdmin, async (req, res, next) => {
   try {
-    const departmentId = parseInt(req.params.id);
+    const departmentId = Number.parseInt(req.params.id, 10);
+
+    if (Number.isNaN(departmentId)) {
+      return res.status(400).json({ error: "Invalid department id" });
+    }
 
     await storage.deleteDepartment(departmentId);
 
@@ -202,17 +210,24 @@ router.get("/audit-logs", requireAuth, requireAdmin, async (req, res, next) => {
   try {
     const { limit = 50, offset = 0 } = req.query;
 
+    const parsedLimit = Number.parseInt(limit as string, 10);
+    const parsedOffset = Number.parseInt(offset as string, 10);
+
+    if (Number.isNaN(parsedLimit) || Number.isNaN(parsedOffset)) {
+      return res.status(400).json({ error: "Invalid pagination parameters" });
+    }
+
     const result = await storage.getAuditLogs(
       req.workspaceId!,
-      parseInt(limit as string),
-      parseInt(offset as string)
+      parsedLimit,
+      parsedOffset
     );
 
     res.json({
       logs: result.logs,
       total: result.total,
-      limit: parseInt(limit as string),
-      offset: parseInt(offset as string),
+      limit: parsedLimit,
+      offset: parsedOffset,
     });
   } catch (error) {
     next(error);

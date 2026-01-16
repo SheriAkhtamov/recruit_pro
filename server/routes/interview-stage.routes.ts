@@ -26,8 +26,8 @@ router.get('/', requireAuth, async (req, res) => {
 // Get interview stages by candidate
 router.get('/candidate/:id', requireAuth, async (req, res) => {
     try {
-        const candidateId = parseInt(req.params.id);
-        if (isNaN(candidateId)) {
+        const candidateId = Number.parseInt(req.params.id, 10);
+        if (Number.isNaN(candidateId)) {
             return res.status(400).json({ error: 'Invalid candidate ID' });
         }
         const stages = await storage.getInterviewStagesByCandidate(candidateId, req.workspaceId);
@@ -60,8 +60,12 @@ router.post('/', requireAuth, async (req, res) => {
 // Update interview stage
 router.put('/:id', requireAuth, async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
         const updates = req.body;
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid interview stage id' });
+        }
 
         // If marking as passed or failed, require feedback
         if ((updates.status === 'passed' || updates.status === 'failed') &&
@@ -111,8 +115,12 @@ router.put('/:id', requireAuth, async (req, res) => {
 // Update interview stage comments (specific endpoint for feedback updates)
 router.put('/:id/comments', requireAuth, async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
         const { comments } = req.body;
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid interview stage id' });
+        }
 
         if (comments === undefined) {
             return res.status(400).json({ error: 'Comments are required' });
@@ -143,7 +151,11 @@ router.put('/:id/comments', requireAuth, async (req, res) => {
 // Delete interview stage
 router.delete('/:id', requireAuth, async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid interview stage id' });
+        }
         // Using any cast because deleteInterviewStage might be missing from IStorage interface definition 
         // but present in implementation, or I missed it.
         if ((storage as any).deleteInterviewStage) {

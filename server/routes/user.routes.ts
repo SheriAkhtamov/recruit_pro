@@ -78,9 +78,9 @@ router.post('/', requireAdmin, async (req, res) => {
 // Get user credentials (admin only)
 router.get('/:id/credentials', requireAdmin, async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
 
-        if (isNaN(id)) {
+        if (Number.isNaN(id)) {
             return res.status(400).json({ error: 'Invalid user ID' });
         }
 
@@ -105,8 +105,12 @@ router.get('/:id/credentials', requireAdmin, async (req, res) => {
 // Update user
 router.put('/:id', requireAuth, async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
         const currentUser = req.user;
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid user ID' });
+        }
 
         // Users can only update their own profile, unless they're admin
         if (currentUser?.id !== id && currentUser?.role !== 'admin') {
@@ -153,7 +157,11 @@ router.put('/:id', requireAuth, async (req, res) => {
 // Delete user
 router.delete('/:id', requireAuth, async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
+        const id = Number.parseInt(req.params.id, 10);
+
+        if (Number.isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid user ID' });
+        }
 
         // Check if user exists
         const user = await storage.getUser(id, req.workspaceId);
