@@ -74,7 +74,7 @@ router.post('/', requireAuth, async (req, res) => {
         broadcastToClients({
             type: 'NEW_MESSAGE',
             data: message,
-            recipientId: parseInt(receiverId),
+            recipientId: parsedReceiverId,
         });
 
         res.json(message);
