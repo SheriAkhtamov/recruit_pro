@@ -1,62 +1,148 @@
 import { db } from '../db';
-import { messages, users, type Message, type InsertMessage } from '@shared/schema';
-import { eq, or, and, desc, sql } from 'drizzle-orm';
+import { messages, users, type Message, type InsertMessage, type User } from '@shared/schema';
+import { eq, or, and, desc, asc, sql } from 'drizzle-orm';
 
 export class MessageStorage {
-    async getConversations(userId: number, workspaceId?: number): Promise<any[]> {
-        // Get unique conversations for the user
-        const query = workspaceId ? sql`
-      SELECT DISTINCT 
-        CASE 
-          WHEN ${messages.senderId} = ${userId} THEN ${messages.receiverId}
-          ELSE ${messages.senderId}
-        END as partner_id,
-        MAX(${messages.createdAt}) as last_message_time
-      FROM ${messages}
-      INNER JOIN ${users} sender ON sender.id = ${messages.senderId}
-      INNER JOIN ${users} receiver ON receiver.id = ${messages.receiverId}
-      WHERE (${messages.senderId} = ${userId} OR ${messages.receiverId} = ${userId})
-        AND sender.workspace_id = ${workspaceId}
-        AND receiver.workspace_id = ${workspaceId}
-      GROUP BY partner_id
-      ORDER BY last_message_time DESC
-    ` : sql`
-      SELECT DISTINCT 
-        CASE 
-          WHEN ${messages.senderId} = ${userId} THEN ${messages.receiverId}
-          ELSE ${messages.senderId}
-        END as partner_id,
-        MAX(${messages.createdAt}) as last_message_time
-      FROM ${messages}
-      WHERE ${messages.senderId} = ${userId} OR ${messages.receiverId} = ${userId}
-      GROUP BY partner_id
-      ORDER BY last_message_time DESC
-    `;
+    async getConversations(userId: number, workspaceId?: number): Promise<User[]> {
+        const senderConditions: any[] = [
+            eq(messages.receiverId, userId),
+            sql`${users.id} != ${userId}`,
+        ];
 
-        const result = await db.execute(query);
-        return result.rows as any[];
+        if (workspaceId) {
+            senderConditions.push(eq(users.workspaceId, workspaceId));
+        }
+
+        const senderUsers = await db
+            .selectDistinct({
+                id: users.id,
+                fullName: users.fullName,
+                position: users.position,
+                email: users.email,
+            })
+            .from(messages)
+            .innerJoin(users, eq(messages.senderId, users.id))
+            .where(and(...senderConditions));
+
+        const receiverConditions: any[] = [
+            eq(messages.senderId, userId),
+            sql`${users.id} != ${userId}`,
+        ];
+
+        if (workspaceId) {
+            receiverConditions.push(eq(users.workspaceId, workspaceId));
+        }
+
+        const receiverUsers = await db
+            .selectDistinct({
+                id: users.id,
+                fullName: users.fullName,
+                position: users.position,
+                email: users.email,
+            })
+            .from(messages)
+            .innerJoin(users, eq(messages.receiverId, users.id))
+            .where(and(...receiverConditions));
+
+        const allUsers = [...senderUsers, ...receiverUsers];
+        const uniqueUsers = allUsers.filter((user, index, self) =>
+            index === self.findIndex(u => u.id === user.id)
+        );
+
+        return uniqueUsers as User[];
     }
 
     async getMessagesBetweenUsers(senderId: number, receiverId: number, workspaceId?: number): Promise<Message[]> {
         const results = await db
-            .select()
+            .select({
+                id: messages.id,
+                senderId: messages.senderId,
+                receiverId: messages.receiverId,
+                content: messages.content,
+                isRead: messages.isRead,
+                createdAt: messages.createdAt,
+                updatedAt: messages.updatedAt,
+                senderId_user: users.id,
+                senderFullName: users.fullName,
+                senderPosition: users.position,
+            })
             .from(messages)
+            .leftJoin(users, eq(messages.senderId, users.id))
             .where(
                 or(
                     and(eq(messages.senderId, senderId), eq(messages.receiverId, receiverId)),
                     and(eq(messages.senderId, receiverId), eq(messages.receiverId, senderId))
                 )
             )
-            .orderBy(desc(messages.createdAt));
+            .orderBy(asc(messages.createdAt));
+
         if (workspaceId) {
-            return results.reverse();
+            return results.map((row: any) => ({
+                id: row.id,
+                senderId: row.senderId,
+                receiverId: row.receiverId,
+                content: row.content,
+                isRead: row.isRead,
+                createdAt: row.createdAt,
+                updatedAt: row.updatedAt,
+                sender: row.senderId_user ? {
+                    id: row.senderId_user,
+                    fullName: row.senderFullName || '',
+                    position: row.senderPosition || '',
+                } : undefined,
+            })) as Message[];
         }
-        return results.reverse();
+        return results.map((row: any) => ({
+            id: row.id,
+            senderId: row.senderId,
+            receiverId: row.receiverId,
+            content: row.content,
+            isRead: row.isRead,
+            createdAt: row.createdAt,
+            updatedAt: row.updatedAt,
+            sender: row.senderId_user ? {
+                id: row.senderId_user,
+                fullName: row.senderFullName || '',
+                position: row.senderPosition || '',
+            } : undefined,
+        })) as Message[];
     }
 
     async createMessage(message: InsertMessage): Promise<Message> {
         const result = await db.insert(messages).values(message).returning();
-        return result[0];
+        const newMessage = result[0];
+
+        const [messageWithSender] = await db
+            .select({
+                id: messages.id,
+                senderId: messages.senderId,
+                receiverId: messages.receiverId,
+                content: messages.content,
+                isRead: messages.isRead,
+                createdAt: messages.createdAt,
+                updatedAt: messages.updatedAt,
+                senderId_user: users.id,
+                senderFullName: users.fullName,
+                senderPosition: users.position,
+            })
+            .from(messages)
+            .leftJoin(users, eq(messages.senderId, users.id))
+            .where(eq(messages.id, newMessage.id));
+
+        return {
+            id: messageWithSender.id,
+            senderId: messageWithSender.senderId,
+            receiverId: messageWithSender.receiverId,
+            content: messageWithSender.content,
+            isRead: messageWithSender.isRead,
+            createdAt: messageWithSender.createdAt,
+            updatedAt: messageWithSender.updatedAt,
+            sender: messageWithSender.senderId_user ? {
+                id: messageWithSender.senderId_user,
+                fullName: messageWithSender.senderFullName || '',
+                position: messageWithSender.senderPosition || '',
+            } : undefined,
+        } as Message;
     }
 
     async updateMessage(id: number, updates: Partial<InsertMessage>): Promise<Message> {
@@ -83,6 +169,16 @@ export class MessageStorage {
                     eq(messages.isRead, false)
                 )
             );
+    }
+
+    async markMessageAsRead(messageId: number, userId: number): Promise<Message> {
+        const [updatedMessage] = await db
+            .update(messages)
+            .set({ isRead: true })
+            .where(and(eq(messages.id, messageId), eq(messages.receiverId, userId)))
+            .returning();
+
+        return updatedMessage;
     }
 }
 
