@@ -130,6 +130,21 @@ export const translations = {
   // Success and error messages
   success: { en: 'Success', ru: 'Успешно' },
   error: { en: 'Error', ru: 'Ошибка' },
+  stageUpdatedTitle: { en: 'Stage updated successfully', ru: 'Этап успешно обновлён' },
+  stageUpdatedDescription: { en: 'The interview stage has been updated.', ru: 'Этап собеседования обновлён.' },
+  stageUpdateFailedTitle: { en: 'Error', ru: 'Ошибка' },
+  stageUpdateFailedDescription: { en: 'Failed to update stage. Please try again.', ru: 'Не удалось обновить этап. Попробуйте ещё раз.' },
+  stageApprovedComment: { en: 'Approved by interviewer', ru: 'Одобрено интервьюером' },
+  stageRejectedComment: { en: 'Rejected by interviewer', ru: 'Отклонено интервьюером' },
+  statusPassed: { en: 'Passed', ru: 'Пройден' },
+  statusFailed: { en: 'Failed', ru: 'Не пройден' },
+  invalidFileTypeTitle: { en: 'Invalid file type', ru: 'Неверный тип файла' },
+  fileTooLargeTitle: { en: 'File too large', ru: 'Файл слишком большой' },
+  noCropSelectedTitle: { en: 'No crop selected', ru: 'Обрезка не выбрана' },
+  noCropSelectedDescription: { en: 'Please crop the image before uploading', ru: 'Пожалуйста, обрежьте изображение перед загрузкой' },
+  photoUploadedTitle: { en: 'Photo uploaded successfully', ru: 'Фото успешно загружено' },
+  photoUploadedDescription: { en: 'The candidate photo has been updated', ru: 'Фото кандидата обновлено' },
+  uploadFailedDescription: { en: 'Failed to upload photo. Please try again.', ru: 'Не удалось загрузить фото. Попробуйте ещё раз.' },
 
   // Vacancy management
   manageJobPositions: { en: 'Manage Job Positions', ru: 'Управление вакансиями' },
@@ -682,10 +697,13 @@ export const translations = {
   // Candidate Details Modal translations
   candidateDetailsDescription: { en: 'Detailed information about the candidate and interview progress', ru: 'Подробная информация о кандидате и прогрессе собеседований' },
   contactInformation: { en: 'Contact Information', ru: 'Контактная информация' },
+  appliedOn: { en: 'Applied', ru: 'Отклик' },
   notSpecified: { en: 'Not specified', ru: 'Не указан' },
   positionInformation: { en: 'Position Information', ru: 'Информация о позиции' },
   responsibleManager: { en: 'Responsible Manager', ru: 'Ответственный менеджер' },
   downloadResume: { en: 'Download Resume', ru: 'Скачать резюме' },
+  resumeLabel: { en: 'Resume', ru: 'Резюме' },
+  fileTypePdf: { en: 'PDF', ru: 'PDF' },
   documentationFiles: { en: 'Documentation Files', ru: 'Файлы документации' },
 
   // Delete candidate functionality
@@ -703,6 +721,7 @@ export const translations = {
   failedToUpdateFeedback: { en: 'Failed to update feedback', ru: 'Не удалось обновить отзыв' },
   dismissalInformation: { en: 'Dismissal Information', ru: 'Информация об увольнении' },
   interviewProgress: { en: 'Interview Progress', ru: 'Прогресс собеседований' },
+  interviewHistory: { en: 'Interview History', ru: 'История собеседований' },
   stagesCompleted: { en: 'stages completed', ru: 'этапов завершено' },
   at: { en: 'at', ru: 'в' },
   left: { en: 'Left', ru: 'Оставлен' },
