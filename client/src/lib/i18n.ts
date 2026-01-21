@@ -493,7 +493,6 @@ export const translations = {
   clickToViewVacancies: { en: 'Click to view vacancies', ru: 'Нажмите для просмотра вакансий' },
   clickToViewDepartment: { en: 'Click to view department', ru: 'Нажмите для просмотра отдела' },
   confirmDeleteDepartment: { en: 'Are you sure you want to delete {name}?', ru: 'Вы уверены, что хотите удалить {name}?' },
-  candidatesLowerCase: { en: 'candidates', ru: 'кандидатов' },
   activeCandidatesMetric: { en: 'Active Candidates', ru: 'Активные кандидаты' },
 
   selectAll: { en: 'Select All', ru: 'Выбрать все' },
@@ -917,8 +916,3 @@ class I18nService {
 
 export const i18n = new I18nService();
 export const t = (key: keyof typeof translations) => i18n.t(key);
-
-
-
-
-

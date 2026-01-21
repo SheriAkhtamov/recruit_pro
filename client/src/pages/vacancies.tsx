@@ -488,7 +488,7 @@ export default function Vacancies() {
                 <div className="flex items-center justify-between mt-auto">
                   <div className="flex items-center gap-2 text-slate-500 text-sm">
                     <Users className="h-4 w-4" />
-                    <span>{getCandidatesCount(vacancy.id)} {t('candidatesLowerCase')}</span>
+                    <span>{getCandidatesCount(vacancy.id)} {t('candidatesLowercase')}</span>
                   </div>
 
                   {canManageVacancies(user!) && (
