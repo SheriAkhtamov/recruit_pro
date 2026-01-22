@@ -206,7 +206,7 @@ router.put('/:id', requireAuth, upload.array('files', 5), async (req, res) => {
             }
         }
 
-        const candidate = await storage.updateCandidate(id, updates);
+        const candidate = await storage.updateCandidate(id, updates, req.workspaceId);
 
         await storage.createAuditLog({
             userId: req.user!.id,
@@ -287,7 +287,7 @@ router.put('/:id/hire', requireAuth, async (req, res) => {
         // If needed, add these columns to candidates table via migration
         const hiredCandidate = await storage.updateCandidate(candidateId, {
             status: 'hired',
-        });
+        }, req.workspaceId);
 
         await storage.createAuditLog({
             userId: req.user!.id,
@@ -333,7 +333,7 @@ router.put('/:id/dismiss', requireAuth, async (req, res) => {
             status: 'dismissed',
             dismissalReason: dismissalReason || null,
             dismissalDate: dismissalDate || new Date(),
-        });
+        }, req.workspaceId);
 
         await storage.createAuditLog({
             userId: req.user!.id,
@@ -390,7 +390,7 @@ router.put('/:id/move-to-documentation', requireAuth, async (req, res) => {
         // Update candidate status to documentation
         const updatedCandidate = await storage.updateCandidate(candidateId, {
             status: 'documentation'
-        });
+        }, req.workspaceId);
 
         await storage.createAuditLog({
             userId: req.user!.id,

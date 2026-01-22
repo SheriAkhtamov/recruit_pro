@@ -145,24 +145,26 @@ export class CandidatesRepository {
    * Create candidate
    */
   async createCandidate(candidate: InsertCandidate): Promise<Candidate> {
-    const [newCandidate] = await db.insert(candidates).values(candidate).returning();
+    return await db.transaction(async (tx) => {
+      const [newCandidate] = await tx.insert(candidates).values(candidate).returning();
 
-    // If interview stage chain is provided, create interview stages
-    if (candidate.interviewStageChain) {
-      const stageChain = candidate.interviewStageChain as any[];
-      for (let i = 0; i < stageChain.length; i++) {
-        const stage = stageChain[i];
-        await db.insert(interviewStages).values({
-          candidateId: newCandidate.id,
-          stageIndex: i,
-          stageName: stage.stageName,
-          interviewerId: stage.interviewerId,
-          status: i === 0 ? 'pending' : 'waiting',
-        });
+      // If interview stage chain is provided, create interview stages
+      if (candidate.interviewStageChain) {
+        const stageChain = candidate.interviewStageChain as any[];
+        for (let i = 0; i < stageChain.length; i++) {
+          const stage = stageChain[i];
+          await tx.insert(interviewStages).values({
+            candidateId: newCandidate.id,
+            stageIndex: i,
+            stageName: stage.stageName,
+            interviewerId: stage.interviewerId,
+            status: i === 0 ? 'pending' : 'waiting',
+          });
+        }
       }
-    }
 
-    return newCandidate;
+      return newCandidate;
+    });
   }
 
   /**

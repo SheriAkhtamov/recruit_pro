@@ -166,7 +166,7 @@ router.put('/candidates/:id', requireAuth, documentationUpload.fields([
             }
         }
 
-        const updatedCandidate = await storage.updateCandidate(id, updates);
+        const updatedCandidate = await storage.updateCandidate(id, updates, req.workspaceId);
 
         await storage.createAuditLog({
             userId: req.user!.id,
@@ -212,7 +212,7 @@ router.put('/candidates/:id/complete', requireAuth, async (req, res) => {
         // Note: salary, startDate, hiredPosition fields not in candidates schema
         const hiredCandidate = await storage.updateCandidate(id, {
             status: 'hired',
-        });
+        }, req.workspaceId);
 
         await storage.createAuditLog({
             userId: req.user!.id,

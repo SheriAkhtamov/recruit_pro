@@ -85,43 +85,48 @@ app.use(morgan(':method :url :status :response-time ms', {
 }));
 
 (async () => {
-  // Initialize database with schema and default data
-  log("🔍 Checking database connection...");
-  const isConnected = await checkDatabaseConnection();
+  try {
+    // Initialize database with schema and default data
+    log("🔍 Checking database connection...");
+    const isConnected = await checkDatabaseConnection();
 
-  if (isConnected) {
-    log("✅ Database connection successful");
-    log("🔧 Initializing database schema and data...");
-    await initializeDatabase();
-  } else {
-    log("❌ Database connection failed. Please check your DATABASE_URL and ensure PostgreSQL is running.");
+    if (isConnected) {
+      log("✅ Database connection successful");
+      log("🔧 Initializing database schema and data...");
+      await initializeDatabase();
+    } else {
+      log("❌ Database connection failed. Please check your DATABASE_URL and ensure PostgreSQL is running.");
+      process.exit(1);
+    }
+
+    // Use new modular routes
+    const server = await registerModularRoutes(app);
+
+    // Global error handler with logging
+    app.use(errorHandler);
+
+    // Setup vite in development, serve static in production
+    if (app.get("env") === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
+
+    // Server configuration
+    const port = parseInt(process.env.PORT || '5000', 10);
+    const host = process.env.HOST || "0.0.0.0";
+
+    server.listen({
+      port,
+      host,
+    }, () => {
+      log(`🚀 Server running on http://${host}:${port}`);
+      if (host === "0.0.0.0") {
+        log(`📡 Accessible from network on port ${port}`);
+      }
+    });
+  } catch (error) {
+    logger.error('Fatal error during server startup', { error });
     process.exit(1);
   }
-
-  // Use new modular routes
-  const server = await registerModularRoutes(app);
-
-  // Global error handler with logging
-  app.use(errorHandler);
-
-  // Setup vite in development, serve static in production
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
-
-  // Server configuration
-  const port = parseInt(process.env.PORT || '5000', 10);
-  const host = process.env.HOST || "0.0.0.0";
-
-  server.listen({
-    port,
-    host,
-  }, () => {
-    log(`🚀 Server running on http://${host}:${port}`);
-    if (host === "0.0.0.0") {
-      log(`📡 Accessible from network on port ${port}`);
-    }
-  });
 })();

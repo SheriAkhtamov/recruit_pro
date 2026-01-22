@@ -1,15 +1,29 @@
 import { Router, static as expressStatic } from 'express';
 import path from 'path';
 import fs from 'fs';
+import { requireAuth } from '../middleware/auth.middleware';
 
 const router = Router();
+const uploadsRoot = path.resolve(process.cwd(), 'uploads');
+
+const resolveSafeUploadPath = (subDir: string, filename: string) => {
+    const safeName = path.basename(filename);
+    if (safeName !== filename) {
+        return null;
+    }
+    const resolved = path.resolve(uploadsRoot, subDir, safeName);
+    if (!resolved.startsWith(path.resolve(uploadsRoot, subDir))) {
+        return null;
+    }
+    return resolved;
+};
 
 // Serve photo files
-router.get('/photos/:filename', (req, res) => {
+router.get('/photos/:filename', requireAuth, (req, res) => {
     const filename = req.params.filename;
-    const filePath = path.join(process.cwd(), 'uploads', 'photos', filename);
+    const filePath = resolveSafeUploadPath('photos', filename);
 
-    if (!fs.existsSync(filePath)) {
+    if (!filePath || !fs.existsSync(filePath)) {
         return res.status(404).json({ error: 'Photo not found' });
     }
 
@@ -17,11 +31,11 @@ router.get('/photos/:filename', (req, res) => {
 });
 
 // Serve general files (documents, resumes, etc.)
-router.get('/:filename', (req, res) => {
+router.get('/:filename', requireAuth, (req, res) => {
     const filename = req.params.filename;
-    const filePath = path.join(process.cwd(), 'uploads', filename);
+    const filePath = resolveSafeUploadPath('', filename);
 
-    if (!fs.existsSync(filePath)) {
+    if (!filePath || !fs.existsSync(filePath)) {
         return res.status(404).json({ error: 'File not found' });
     }
 

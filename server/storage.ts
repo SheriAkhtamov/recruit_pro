@@ -52,7 +52,7 @@ export interface IStorage {
   getVacancies(workspaceId?: number): Promise<Vacancy[]>;
   getVacancy(id: number, workspaceId?: number): Promise<Vacancy | undefined>;
   createVacancy(vacancy: InsertVacancy): Promise<Vacancy>;
-  updateVacancy(id: number, vacancy: Partial<InsertVacancy>): Promise<Vacancy>;
+  updateVacancy(id: number, vacancy: Partial<InsertVacancy>, workspaceId?: number): Promise<Vacancy>;
   deleteVacancy(id: number, workspaceId?: number): Promise<void>;
   getActiveVacancies(workspaceId?: number): Promise<Vacancy[]>;
 
@@ -65,7 +65,7 @@ export interface IStorage {
   getCandidatesByInterviewer(interviewerId: number, workspaceId?: number): Promise<Candidate[]>;
   getCandidatesByStatus(status: string, workspaceId?: number): Promise<Candidate[]>;
   createCandidate(candidate: InsertCandidate): Promise<Candidate>;
-  updateCandidate(id: number, candidate: Partial<InsertCandidate>): Promise<Candidate>;
+  updateCandidate(id: number, candidate: Partial<InsertCandidate>, workspaceId?: number): Promise<Candidate>;
   deleteCandidate(id: number, workspaceId?: number): Promise<void>;
   dismissCandidate(id: number, dismissalReason: string, dismissalDate: Date, workspaceId?: number): Promise<Candidate>;
 
@@ -405,12 +405,16 @@ export class DatabaseStorage implements IStorage {
     return newVacancy;
   }
 
-  async updateVacancy(id: number, vacancy: Partial<InsertVacancy>): Promise<Vacancy> {
+  async updateVacancy(id: number, vacancy: Partial<InsertVacancy>, workspaceId?: number): Promise<Vacancy> {
     this.ensureDb();
+    const conditions = [eq(vacancies.id, id)];
+    if (workspaceId) {
+      conditions.push(eq(vacancies.workspaceId, workspaceId));
+    }
     const [updatedVacancy] = await db
       .update(vacancies)
       .set({ ...vacancy, updatedAt: new Date() })
-      .where(eq(vacancies.id, id))
+      .where(and(...conditions))
       .returning();
     return updatedVacancy;
   }
@@ -679,32 +683,38 @@ export class DatabaseStorage implements IStorage {
 
   async createCandidate(candidate: InsertCandidate): Promise<Candidate> {
     this.ensureDb();
-    const [newCandidate] = await db.insert(candidates).values(candidate).returning();
+    return await db.transaction(async (tx) => {
+      const [newCandidate] = await tx.insert(candidates).values(candidate).returning();
 
-    // If interview stage chain is provided, create interview stages
-    if (candidate.interviewStageChain) {
-      const stageChain = candidate.interviewStageChain as any[];
-      for (let i = 0; i < stageChain.length; i++) {
-        const stage = stageChain[i];
-        await db.insert(interviewStages).values({
-          candidateId: newCandidate.id,
-          stageIndex: i,
-          stageName: stage.stageName,
-          interviewerId: stage.interviewerId,
-          status: i === 0 ? 'pending' : 'waiting', // First stage is pending, others wait
-        });
+      // If interview stage chain is provided, create interview stages
+      if (candidate.interviewStageChain) {
+        const stageChain = candidate.interviewStageChain as any[];
+        for (let i = 0; i < stageChain.length; i++) {
+          const stage = stageChain[i];
+          await tx.insert(interviewStages).values({
+            candidateId: newCandidate.id,
+            stageIndex: i,
+            stageName: stage.stageName,
+            interviewerId: stage.interviewerId,
+            status: i === 0 ? 'pending' : 'waiting', // First stage is pending, others wait
+          });
+        }
       }
-    }
 
-    return newCandidate;
+      return newCandidate;
+    });
   }
 
-  async updateCandidate(id: number, candidate: Partial<InsertCandidate>): Promise<Candidate> {
+  async updateCandidate(id: number, candidate: Partial<InsertCandidate>, workspaceId?: number): Promise<Candidate> {
     this.ensureDb();
+    const conditions = [eq(candidates.id, id)];
+    if (workspaceId) {
+      conditions.push(eq(candidates.workspaceId, workspaceId));
+    }
     const [updatedCandidate] = await db
       .update(candidates)
       .set({ ...candidate, updatedAt: new Date() })
-      .where(eq(candidates.id, id))
+      .where(and(...conditions))
       .returning();
     return updatedCandidate;
   }

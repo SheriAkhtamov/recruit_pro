@@ -1,6 +1,13 @@
 import winston from 'winston';
+import fs from 'fs';
+import path from 'path';
 
 const isProduction = process.env.NODE_ENV === 'production';
+const logsDir = path.resolve(process.cwd(), 'logs');
+
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
 
 export const logger = winston.createLogger({
   level: isProduction ? 'info' : 'debug',

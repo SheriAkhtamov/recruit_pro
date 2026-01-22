@@ -102,7 +102,7 @@ router.put('/:id', requireAuth, requireAdmin, async (req, res) => {
         }
 
         const oldVacancy = await storage.getVacancy(id, req.workspaceId);
-        const vacancy = await storage.updateVacancy(id, updates);
+        const vacancy = await storage.updateVacancy(id, updates, req.workspaceId);
 
         await storage.createAuditLog({
             userId: req.user!.id,
