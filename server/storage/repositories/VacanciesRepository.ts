@@ -56,15 +56,19 @@ export class VacanciesRepository {
     return createdVacancy;
   }
 
-  async updateVacancy(id: number, vacancy: Partial<InsertVacancy>): Promise<Vacancy> {
+  async updateVacancy(id: number, vacancy: Partial<InsertVacancy>, workspaceId?: number): Promise<Vacancy> {
     this.ensureDb();
+    const conditions = [eq(vacancies.id, id)];
+    if (workspaceId !== undefined) {
+      conditions.push(eq(vacancies.workspaceId, workspaceId));
+    }
     const [updatedVacancy] = await db
       .update(vacancies)
       .set({
         ...vacancy,
         updatedAt: new Date(),
       })
-      .where(eq(vacancies.id, id))
+      .where(and(...conditions))
       .returning();
     
     if (!updatedVacancy) {

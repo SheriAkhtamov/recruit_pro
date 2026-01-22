@@ -24,11 +24,15 @@ export class VacancyStorage {
         return result[0];
     }
 
-    async updateVacancy(id: number, vacancy: Partial<InsertVacancy>): Promise<Vacancy> {
+    async updateVacancy(id: number, vacancy: Partial<InsertVacancy>, workspaceId?: number): Promise<Vacancy> {
+        const conditions = [eq(vacancies.id, id)];
+        if (workspaceId) {
+            conditions.push(eq(vacancies.workspaceId, workspaceId));
+        }
         const result = await db
             .update(vacancies)
             .set({ ...vacancy, updatedAt: new Date() })
-            .where(eq(vacancies.id, id))
+            .where(and(...conditions))
             .returning();
         return result[0];
     }

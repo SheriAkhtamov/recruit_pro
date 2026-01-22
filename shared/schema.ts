@@ -72,6 +72,7 @@ export const candidates = pgTable("candidates", {
   email: varchar("email", { length: 255 }),
   phone: varchar("phone", { length: 50 }),
   city: varchar("city", { length: 255 }),
+  notes: text("notes"),
   vacancyId: integer("vacancy_id"),
   resumeUrl: text("resume_url"),
   resumeFilename: varchar("resume_filename", { length: 255 }),

@@ -1,4 +1,4 @@
-import { Express, Request, Response, NextFunction } from 'express';
+import { Express } from 'express';
 import type { Server } from 'http';
 import session from 'express-session';
 import pgSession from 'connect-pg-simple';
@@ -17,6 +17,7 @@ import messageRoutes from './message.routes';
 import departmentRoutes from './department.routes';
 import workspaceRoutes from './workspace/workspace.routes';
 import { logger } from '../lib/logger';
+import { requireAuth } from '../middleware/auth.middleware';
 
 // Import broadcast setters
 import { setBroadcastFunction as setCandidateBroadcast } from './candidate.routes';
@@ -63,14 +64,6 @@ const buildSessionConfig = () => {
     };
 };
 
-const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
-    logger.error('Unhandled error:', { error: err, path: req.path, method: req.method });
-    if (process.env.NODE_ENV !== 'production') {
-        return next(err);
-    }
-    res.status(500).json({ error: 'Internal server error' });
-};
-
 /**
  * Register all application routes
  * 
@@ -102,8 +95,7 @@ export async function registerModularRoutes(app: Express): Promise<Server> {
     app.use('/api/files', fileRoutes);
     app.use('/api/messages', messageRoutes);
     app.use('/api/workspace', workspaceRoutes);
-    app.use('/uploads', uploadsMiddleware);
-    app.use(errorHandler);
+    app.use('/uploads', requireAuth, uploadsMiddleware);
 
     const httpServer = createServer(app);
 

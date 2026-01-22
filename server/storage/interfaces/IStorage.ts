@@ -39,7 +39,7 @@ export interface IStorage {
   getVacancies(workspaceId?: number): Promise<Vacancy[]>;
   getVacancy(id: number, workspaceId?: number): Promise<Vacancy | undefined>;
   createVacancy(vacancy: InsertVacancy): Promise<Vacancy>;
-  updateVacancy(id: number, vacancy: Partial<InsertVacancy>): Promise<Vacancy>;
+  updateVacancy(id: number, vacancy: Partial<InsertVacancy>, workspaceId?: number): Promise<Vacancy>;
   deleteVacancy(id: number): Promise<void>;
   getActiveVacancies(workspaceId?: number): Promise<Vacancy[]>;
 
@@ -51,7 +51,7 @@ export interface IStorage {
   getCandidatesByInterviewer(interviewerId: number, workspaceId?: number): Promise<Candidate[]>;
   getCandidatesByStatus(status: string, workspaceId?: number): Promise<Candidate[]>;
   createCandidate(candidate: InsertCandidate): Promise<Candidate>;
-  updateCandidate(id: number, candidate: Partial<InsertCandidate>): Promise<Candidate>;
+  updateCandidate(id: number, candidate: Partial<InsertCandidate>, workspaceId?: number): Promise<Candidate>;
   deleteCandidate(id: number): Promise<void>;
   dismissCandidate(id: number, dismissalReason: string, dismissalDate: Date, workspaceId?: number): Promise<Candidate>;
 

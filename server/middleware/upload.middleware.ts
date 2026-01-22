@@ -47,7 +47,10 @@ export const upload = multer({
             console.debug(`Rejected upload from ${req.ip} with type ${file.mimetype}`);
         }
 
-        cb(null, isAllowed);
+        if (!isAllowed) {
+            return cb(new Error('Unsupported file type'));
+        }
+        cb(null, true);
     },
 });
 
@@ -92,7 +95,10 @@ export const uploadPhoto = multer({
             console.debug(`Rejected photo upload from ${req.ip} with type ${file.mimetype}`);
         }
 
-        cb(null, isAllowed);
+        if (!isAllowed) {
+            return cb(new Error('Unsupported file type'));
+        }
+        cb(null, true);
     },
 });
 
@@ -137,7 +143,10 @@ export const documentationUpload = multer({
         if (file.fieldname === 'photo') {
             const allowedPhotoTypes = ['image/jpeg', 'image/jpg', 'image/png'];
             const isAllowed = allowedPhotoTypes.includes(file.mimetype);
-            cb(null, isAllowed);
+            if (!isAllowed) {
+                return cb(new Error('Unsupported file type'));
+            }
+            cb(null, true);
         } else {
             const allowedDocTypes = [
                 'application/pdf',
@@ -150,7 +159,10 @@ export const documentationUpload = multer({
             if (!isAllowed && process.env.NODE_ENV !== 'production') {
                 console.debug(`Rejected documentation upload from ${req.ip} with type ${file.mimetype}`);
             }
-            cb(null, isAllowed);
+            if (!isAllowed) {
+                return cb(new Error('Unsupported file type'));
+            }
+            cb(null, true);
         }
     },
 });

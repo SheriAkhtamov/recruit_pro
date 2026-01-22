@@ -85,6 +85,7 @@ CREATE TABLE IF NOT EXISTS candidates (
     email VARCHAR(255),
     phone VARCHAR(50),
     city VARCHAR(255),
+    notes TEXT,
     vacancy_id INTEGER REFERENCES vacancies(id),
     resume_url TEXT,
     resume_filename VARCHAR(255),
@@ -374,6 +375,10 @@ async function updateExistingTables(): Promise<void> {
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns
                        WHERE table_name='candidates' AND column_name='photo_url') THEN
           ALTER TABLE candidates ADD COLUMN photo_url TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                       WHERE table_name='candidates' AND column_name='notes') THEN
+          ALTER TABLE candidates ADD COLUMN notes TEXT;
         END IF;
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns
                        WHERE table_name='candidates' AND column_name='dismissal_reason') THEN
