@@ -63,7 +63,7 @@ export const storage = {
     markAllNotificationsAsRead: notificationStorage.markAllNotificationsAsRead.bind(notificationStorage),
 
     // Audit Log operations (modular)
-    getAuditLogs: auditStorage.getAuditLogs.bind(auditStorage),
+    getAuditLogs: legacyStorageInstance.getAuditLogs.bind(legacyStorageInstance),
     createAuditLog: auditStorage.createAuditLog.bind(auditStorage),
 
     // Message operations (modular)
